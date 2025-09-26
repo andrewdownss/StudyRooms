@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -15,7 +15,7 @@ export default function Home() {
             <nav className="flex gap-4">
               <Link
                 href="/book-room"
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-red-800 text-white px-6 py-2 rounded-lg hover:bg-red-900 transition-colors"
               >
                 Book a Room
               </Link>
@@ -33,7 +33,7 @@ export default function Home() {
           <h2 className="text-5xl font-bold text-gray-900 mb-6">
             Reserve Your Perfect Study Space
           </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
             Modern, intuitive study room booking for students, organizations,
             and classes. Find and reserve the ideal space for your academic
             needs.
@@ -42,11 +42,11 @@ export default function Home() {
           <div className="flex gap-4 justify-center mb-16">
             <Link
               href="/book-room"
-              className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg"
+              className="bg-red-800 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-red-900 transition-colors shadow-lg"
             >
               Start Booking
             </Link>
-            <button className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-colors">
+            <button className="border-2 border-red-800 text-red-800 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-red-50 transition-colors">
               View My Reservations
             </button>
           </div>
@@ -55,9 +55,9 @@ export default function Home() {
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
               <svg
-                className="w-6 h-6 text-blue-600"
+                className="w-6 h-6 text-red-800"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -70,8 +70,8 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Weekly Calendar View</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold mb-2 text-gray-900">Weekly Calendar View</h3>
+            <p className="text-gray-700">
               See room availability across a full week and plan your study
               sessions effectively.
             </p>
@@ -93,8 +93,8 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Instant Booking</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold mb-2 text-gray-900">Instant Booking</h3>
+            <p className="text-gray-700">
               Click on an open time slot to immediately reserve a room. No
               waiting, no hassle.
             </p>
@@ -116,8 +116,8 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Smart Filtering</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold mb-2 text-gray-900">Smart Filtering</h3>
+            <p className="text-gray-700">
               Filter by capacity, features, accessibility, and more to find the
               perfect room.
             </p>
@@ -131,24 +131,24 @@ export default function Home() {
           </h3>
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">50+</div>
-              <div className="text-gray-600">Study Rooms</div>
+              <div className="text-3xl font-bold text-red-800 mb-2">73</div>
+              <div className="text-gray-700">Study Rooms</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-green-600 mb-2">
                 1,200+
               </div>
-              <div className="text-gray-600">Active Students</div>
+              <div className="text-gray-700">Active Students</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-purple-600 mb-2">95%</div>
-              <div className="text-gray-600">Satisfaction Rate</div>
+              <div className="text-gray-700">Satisfaction Rate</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-orange-600 mb-2">
                 24/7
               </div>
-              <div className="text-gray-600">Availability</div>
+              <div className="text-gray-700">Availability</div>
             </div>
           </div>
         </div>
