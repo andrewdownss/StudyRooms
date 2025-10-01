@@ -1,5 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
+import { AuthButton } from "@/components/AuthButton";
+import { DashboardLink } from "@/components/DashboardLink";
 
 export default function Home() {
   return (
@@ -12,16 +13,15 @@ export default function Home() {
               <h1 className="text-3xl font-bold text-gray-900">StudyRooms</h1>
               <p className="text-gray-600">Library Study Room Booking System</p>
             </div>
-            <nav className="flex gap-4">
+            <nav className="flex gap-4 items-center">
+              <DashboardLink />
               <Link
                 href="/book-room"
                 className="bg-red-800 text-white px-6 py-2 rounded-lg hover:bg-red-900 transition-colors"
               >
                 Book a Room
               </Link>
-              <button className="border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                Login
-              </button>
+              <AuthButton />
             </nav>
           </div>
         </div>
@@ -46,9 +46,12 @@ export default function Home() {
             >
               Start Booking
             </Link>
-            <button className="border-2 border-red-800 text-red-800 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-red-50 transition-colors">
-              View My Reservations
-            </button>
+            <Link
+              href="/dashboard"
+              className="border-2 border-red-800 text-red-800 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-red-50 transition-colors"
+            >
+              View My Dashboard
+            </Link>
           </div>
         </div>
 
@@ -70,7 +73,9 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">Weekly Calendar View</h3>
+            <h3 className="text-xl font-semibold mb-2 text-gray-900">
+              Weekly Calendar View
+            </h3>
             <p className="text-gray-700">
               See room availability across a full week and plan your study
               sessions effectively.
@@ -93,7 +98,9 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">Instant Booking</h3>
+            <h3 className="text-xl font-semibold mb-2 text-gray-900">
+              Instant Booking
+            </h3>
             <p className="text-gray-700">
               Click on an open time slot to immediately reserve a room. No
               waiting, no hassle.
@@ -116,7 +123,9 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-gray-900">Smart Filtering</h3>
+            <h3 className="text-xl font-semibold mb-2 text-gray-900">
+              Smart Filtering
+            </h3>
             <p className="text-gray-700">
               Filter by capacity, features, accessibility, and more to find the
               perfect room.
