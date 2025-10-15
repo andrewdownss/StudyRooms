@@ -17,9 +17,26 @@ export const authOptions: NextAuthOptions = {
       if (user.email && !user.email.endsWith("@g.cofc.edu")) {
         return false; // Deny sign-in
       }
+      // Promote to admin if email is configured
+      try {
+        if (user.email) {
+          const adminEmails = (process.env.ADMIN_EMAILS || "")
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean);
+          if (adminEmails.includes(user.email.toLowerCase())) {
+            await prisma.user.updateMany({
+              where: { email: user.email },
+              data: { role: "admin" },
+            });
+          }
+        }
+      } catch {
+        // ignore; sign-in should not fail due to role assignment
+      }
       return true; // Allow sign-in
     },
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
       // Persist the OAuth access_token and or the user id to the token right after signin
       if (account) {
         token.accessToken = account.access_token;
@@ -28,12 +45,28 @@ export const authOptions: NextAuthOptions = {
       if (profile) {
         token.profile = profile;
       }
+      // Attach role from DB; use user on initial sign-in, otherwise look up by email
+      try {
+        const email = (user?.email as string) || (token?.email as string);
+        if (email) {
+          const dbUser = await prisma.user.findUnique({ where: { email } });
+          if (dbUser?.role) {
+            token.role = dbUser.role;
+          }
+        }
+      } catch {
+        // swallow to avoid breaking auth on role lookup failure
+      }
       return token;
     },
     async session({ session, token }) {
       // Send properties to the client, like an access_token and user id from a provider.
       session.accessToken = token.accessToken as string;
       session.idToken = token.idToken as string;
+      // Expose role on the session
+      if (session.user) {
+        session.user.role = token.role ?? "user";
+      }
       return session;
     },
     async redirect({ url, baseUrl }) {
@@ -65,6 +98,12 @@ declare module "next-auth" {
   interface Session {
     accessToken?: string;
     idToken?: string;
+    user: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      role?: string; // "user" | "admin"
+    };
   }
 }
 
@@ -73,5 +112,6 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     idToken?: string;
     profile?: unknown;
+    role?: string; // "user" | "admin"
   }
 }

@@ -14,10 +14,20 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const limit = searchParams.get("limit");
-    const userId = searchParams.get("userId");
+
+    // Load current user to check role
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const isAdmin = currentUser.role === "admin";
 
     const bookings = await prisma.booking.findMany({
-      where: userId ? { userId } : undefined,
+      where: isAdmin ? undefined : { userId: currentUser.id },
       take: limit ? parseInt(limit) : undefined,
       include: {
         room: true,

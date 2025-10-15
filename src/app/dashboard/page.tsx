@@ -93,6 +93,20 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              {session.user?.role === "admin" && (
+                <Link
+                  href="/admin/bookings"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Admin
+                </Link>
+              )}
+              <Link
+                href="/settings"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Settings
+              </Link>
               <Link
                 href="/book-room"
                 className="bg-red-800 text-white px-6 py-2 rounded-lg hover:bg-red-900 transition-colors"
@@ -242,7 +256,7 @@ export default function Dashboard() {
                     >
                       <div>
                         <h4 className="font-medium text-gray-900">
-                          {booking.roomName}
+                          {booking.room.name}
                         </h4>
                         <p className="text-sm text-gray-600">
                           {new Date(booking.date).toLocaleDateString()} at{" "}
@@ -311,7 +325,7 @@ export default function Dashboard() {
                     >
                       <div>
                         <h4 className="font-medium text-gray-900">
-                          {booking.roomName}
+                          {booking.room.name}
                         </h4>
                         <p className="text-sm text-gray-600">
                           {new Date(booking.date).toLocaleDateString()} at{" "}

@@ -71,7 +71,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (booking.userId !== user.id) {
+    const isAdmin = user.role === "admin";
+    if (!isAdmin && booking.userId !== user.id) {
       return NextResponse.json(
         { error: "Not authorized to modify this booking" },
         { status: 403 }
@@ -134,7 +135,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (booking.userId !== user.id) {
+    const isAdmin = user.role === "admin";
+    if (!isAdmin && booking.userId !== user.id) {
       return NextResponse.json(
         { error: "Not authorized to delete this booking" },
         { status: 403 }

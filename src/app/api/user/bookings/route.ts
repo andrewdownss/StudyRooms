@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // GET /api/user/bookings - Get current user's bookings
 export async function GET(request: NextRequest) {
@@ -24,9 +25,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const upcoming = searchParams.get("upcoming");
 
-    const whereClause: any = {
-      userId: user.id,
-    };
+    const whereClause: Prisma.BookingWhereInput = { userId: user.id };
 
     if (status) {
       whereClause.status = status;
