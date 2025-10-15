@@ -1,7 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
+import { container } from "./container";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -10,30 +12,69 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    CredentialsProvider({
+      id: 'credentials',
+      name: 'Email and Password',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+        
+        try {
+          const authService = container.credentialsAuthService;
+          const user = await authService.validateCredentials(
+            credentials.email,
+            credentials.password
+          );
+          
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          };
+        } catch (error) {
+          console.error('Credentials auth error:', error);
+          return null;
+        }
+      }
+    })
   ],
   callbacks: {
-    async signIn({ user }) {
-      // Check if user email ends with @g.cofc.edu
-      if (user.email && !user.email.endsWith("@g.cofc.edu")) {
-        return false; // Deny sign-in
+    async signIn({ user, account }) {
+      // For credentials provider, validation already happened in authorize()
+      if (account?.provider === 'credentials') {
+        return true;
       }
-      // Promote to admin if email is configured
-      try {
-        if (user.email) {
-          const adminEmails = (process.env.ADMIN_EMAILS || "")
-            .split(",")
-            .map((s) => s.trim().toLowerCase())
-            .filter(Boolean);
-          if (adminEmails.includes(user.email.toLowerCase())) {
-            await prisma.user.updateMany({
-              where: { email: user.email },
-              data: { role: "admin" },
-            });
-          }
+      
+      // For Google provider, check email domain
+      if (account?.provider === 'google') {
+        if (user.email && !user.email.endsWith("@g.cofc.edu")) {
+          return false; // Deny sign-in
         }
-      } catch {
-        // ignore; sign-in should not fail due to role assignment
+        // Promote to admin if email is configured
+        try {
+          if (user.email) {
+            const adminEmails = (process.env.ADMIN_EMAILS || "")
+              .split(",")
+              .map((s) => s.trim().toLowerCase())
+              .filter(Boolean);
+            if (adminEmails.includes(user.email.toLowerCase())) {
+              await prisma.user.updateMany({
+                where: { email: user.email },
+                data: { role: "admin" },
+              });
+            }
+          }
+        } catch {
+          // ignore; sign-in should not fail due to role assignment
+        }
       }
+      
       return true; // Allow sign-in
     },
     async jwt({ token, account, profile, user }) {

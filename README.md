@@ -1,36 +1,211 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StudyRooms - College of Charleston Study Room Booking System
 
-## Getting Started
+A modern study room booking system built with Next.js 15, featuring dual authentication (Google OAuth + Email/Password), object-oriented architecture, and real-time availability management.
 
-First, run the development server:
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- Git
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd StudyRooms
+
+# Install dependencies
+npm install
+
+# Set up the database
+npm run db:migrate
+npm run db:seed
+
+# Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` to access the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env` file in the root directory:
 
-## Learn More
+```env
+# Database
+DATABASE_URL="file:./dev.db"
 
-To learn more about Next.js, take a look at the following resources:
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-here-generate-with-openssl-rand-base64-32"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Google OAuth (Optional - for Google Sign-In)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Admin Configuration
+ADMIN_EMAILS="admin@g.cofc.edu"
+```
 
-## Deploy on Vercel
+## 🔐 Authentication
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Supported Methods
+1. **Email/Password**: Register with your `@g.cofc.edu` email
+   - Minimum 8-character password required
+   - Name field required
+   - No email verification (simplified for MVP)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Google OAuth**: Sign in with College of Charleston Google account
+   - Requires `@g.cofc.edu` domain
+   - Automatic account creation
+
+### Google OAuth Setup (Optional)
+
+If you want to enable Google OAuth:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials:
+   - Application type: Web application
+   - Authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
+5. Copy Client ID and Client Secret to `.env`
+
+## 📚 Features
+
+### For Students
+- **Book Study Rooms**: Choose room size, time, and duration
+- **View Bookings**: See all your upcoming reservations
+- **Cancel Bookings**: Cancel future bookings (not past ones)
+- **Room Availability**: Real-time availability checking
+- **Dashboard**: Quick overview of upcoming bookings
+
+### For Admins
+- **Manage All Bookings**: View and manage all user bookings
+- **User Management**: View registered users
+- **Room Management**: Add/edit/remove study rooms
+- **Booking Override**: Create bookings for any user
+
+## 🏗️ Architecture
+
+This project demonstrates **Object-Oriented Design (OOP)** principles:
+
+### Design Patterns
+- **Repository Pattern**: Data access abstraction
+- **Service Layer Pattern**: Business logic separation
+- **Dependency Injection**: Loose coupling via Container
+- **Strategy Pattern**: Multiple authentication providers
+- **Domain-Driven Design**: Rich domain models with business logic
+
+### SOLID Principles
+- **Single Responsibility**: Each class has one clear purpose
+- **Open/Closed**: Extensible without modification
+- **Liskov Substitution**: Interfaces used throughout
+- **Interface Segregation**: Small, focused interfaces
+- **Dependency Inversion**: Depend on abstractions
+
+### Project Structure
+
+```
+src/
+├── app/                      # Next.js 15 App Router
+│   ├── api/                  # API routes
+│   ├── auth/                 # Authentication pages
+│   ├── book-room/            # Room booking page
+│   ├── dashboard/            # User dashboard
+│   └── settings/             # User settings
+├── components/               # React components
+├── lib/
+│   ├── domain/              # Domain models (Booking, Room, User)
+│   ├── repositories/        # Data access layer
+│   ├── services/            # Business logic layer
+│   ├── interfaces/          # TypeScript interfaces
+│   ├── validation/          # Zod schemas
+│   ├── errors/              # Custom error classes
+│   ├── container.ts         # Dependency injection
+│   └── auth.ts              # NextAuth configuration
+└── prisma/
+    ├── schema.prisma        # Database schema
+    └── seed.ts              # Database seeder
+```
+
+## 🗄️ Database Schema
+
+**Users**: Email, name, role (student/admin), password (optional), authProvider  
+**Rooms**: Name, category (small/large), capacity, description  
+**Bookings**: User, room, date, time, duration, status  
+
+## 🛠️ Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run db:migrate   # Run database migrations
+npm run db:seed      # Seed database with sample rooms
+npm run db:studio    # Open Prisma Studio (database GUI)
+```
+
+## 📝 API Endpoints
+
+### Authentication
+- `POST /api/auth/signup` - Register new user
+- `GET/POST /api/auth/[...nextauth]` - NextAuth handlers
+
+### Bookings
+- `GET /api/bookings` - List all bookings (admin)
+- `POST /api/bookings` - Create booking
+- `GET /api/bookings/[id]` - Get booking details
+- `PATCH /api/bookings/[id]` - Update booking
+- `DELETE /api/bookings/[id]` - Cancel booking
+- `GET /api/user/bookings` - Get current user's bookings
+
+### Rooms
+- `GET /api/rooms` - List all rooms
+- `GET /api/rooms/categories` - List room categories
+
+## 🧪 Testing
+
+### Manual Testing Checklist
+- [ ] Register with email/password
+- [ ] Sign in with email/password
+- [ ] Sign in with Google OAuth
+- [ ] Book a study room
+- [ ] View upcoming bookings
+- [ ] Cancel a booking
+- [ ] Admin: View all bookings
+- [ ] Validation: Try booking in the past
+- [ ] Validation: Try invalid email domain
+
+## 🚨 Troubleshooting
+
+### Database Issues
+```bash
+# Reset database (deletes all data)
+rm prisma/dev.db
+npm run db:migrate
+npm run db:seed
+```
+
+### NextAuth Errors
+- Verify `NEXTAUTH_SECRET` is set in `.env`
+- Check `NEXTAUTH_URL` matches your domain
+- For Google OAuth, verify redirect URIs in Google Console
+
+### Port Already in Use
+```bash
+# Kill process on port 3000 (macOS/Linux)
+lsof -ti:3000 | xargs kill -9
+
+# Or let Next.js use a different port automatically
+```
+
+## 📄 License
+
+This project is for educational purposes at the College of Charleston.
+
+## 👥 Contact
+
+For questions or support, contact your system administrator.

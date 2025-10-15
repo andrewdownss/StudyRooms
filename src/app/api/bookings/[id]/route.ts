@@ -1,7 +1,14 @@
+/**
+ * Individual Booking API Routes
+ * 
+ * Thin layer that delegates to BookingHandler.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { container } from "@/lib/container";
+import { BookingHandler } from "@/lib/http/handlers/BookingHandler";
+import { getCurrentUserId } from "@/lib/http/middleware/auth";
+import { ApplicationError } from "@/lib/errors";
 
 // GET /api/bookings/[id] - Get a specific booking
 export async function GET(
@@ -9,149 +16,64 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
-      include: {
-        room: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    if (!booking) {
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(booking);
+    const userId = await getCurrentUserId();
+    const handler = new BookingHandler(container.bookingService);
+    return handler.getBooking(params.id, userId);
   } catch (error) {
-    console.error("Error fetching booking:", error);
+    if (error instanceof ApplicationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.statusCode }
+      );
+    }
     return NextResponse.json(
-      { error: "Failed to fetch booking" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-// PATCH /api/bookings/[id] - Update a booking (e.g., cancel)
+// PATCH /api/bookings/[id] - Update a booking status
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
-    });
-
-    if (!booking) {
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
-    }
-
-    const isAdmin = user.role === "admin";
-    if (!isAdmin && booking.userId !== user.id) {
+    const userId = await getCurrentUserId();
+    const handler = new BookingHandler(container.bookingService);
+    return handler.updateBooking(request, params.id, userId);
+  } catch (error) {
+    if (error instanceof ApplicationError) {
       return NextResponse.json(
-        { error: "Not authorized to modify this booking" },
-        { status: 403 }
+        { error: error.message },
+        { status: error.statusCode }
       );
     }
-
-    const body = await request.json();
-    const { status } = body;
-
-    const updatedBooking = await prisma.booking.update({
-      where: { id: params.id },
-      data: { status },
-      include: {
-        room: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(updatedBooking);
-  } catch (error) {
-    console.error("Error updating booking:", error);
     return NextResponse.json(
-      { error: "Failed to update booking" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/bookings/[id] - Delete a booking
+// DELETE /api/bookings/[id] - Delete a booking (admin only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const booking = await prisma.booking.findUnique({
-      where: { id: params.id },
-    });
-
-    if (!booking) {
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
-    }
-
-    const isAdmin = user.role === "admin";
-    if (!isAdmin && booking.userId !== user.id) {
+    const userId = await getCurrentUserId();
+    const handler = new BookingHandler(container.bookingService);
+    return handler.deleteBooking(params.id, userId);
+  } catch (error) {
+    if (error instanceof ApplicationError) {
       return NextResponse.json(
-        { error: "Not authorized to delete this booking" },
-        { status: 403 }
+        { error: error.message },
+        { status: error.statusCode }
       );
     }
-
-    await prisma.booking.delete({
-      where: { id: params.id },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting booking:", error);
     return NextResponse.json(
-      { error: "Failed to delete booking" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

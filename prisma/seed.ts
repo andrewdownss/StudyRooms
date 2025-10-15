@@ -82,6 +82,9 @@ async function main() {
       `  - ${room.name} (${room.category}, capacity: ${room.capacity})`
     );
   });
+
+  console.log("\n✅ Seed completed successfully!");
+  console.log("   All rooms are available for booking.");
 }
 
 main()

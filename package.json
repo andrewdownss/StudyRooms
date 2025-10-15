@@ -7,35 +7,38 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed.ts",
+    "db:seed": "tsx prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:reset": "rm -f prisma/dev.db && npm run db:migrate && npm run db:seed"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\\\"module\\\":\\\"CommonJS\\\"} prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
     "@auth/prisma-adapter": "^2.10.0",
     "@prisma/client": "^6.16.3",
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^12.4.1",
-    "drizzle-orm": "^0.44.5",
     "next": "15.5.4",
     "next-auth": "^4.24.11",
     "prisma": "^6.16.3",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "typescript": "^5"
   }
 }

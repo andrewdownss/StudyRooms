@@ -368,9 +368,9 @@ export default function SettingsPage() {
                       Your preferred booking length
                     </p>
                   </div>
-                  <select className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-600 focus:border-transparent">
+                  <select defaultValue="1 hour" className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-600 focus:border-transparent">
                     <option>30 minutes</option>
-                    <option selected>1 hour</option>
+                    <option>1 hour</option>
                     <option>1.5 hours</option>
                     <option>2 hours</option>
                     <option>3 hours</option>

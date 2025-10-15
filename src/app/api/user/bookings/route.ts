@@ -1,57 +1,30 @@
+/**
+ * User Bookings API Routes
+ * 
+ * Thin layer that delegates to BookingHandler for user-specific bookings.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { container } from "@/lib/container";
+import { BookingHandler } from "@/lib/http/handlers/BookingHandler";
+import { getCurrentUserId } from "@/lib/http/middleware/auth";
+import { ApplicationError } from "@/lib/errors";
 
 // GET /api/user/bookings - Get current user's bookings
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get("status");
-    const upcoming = searchParams.get("upcoming");
-
-    const whereClause: Prisma.BookingWhereInput = { userId: user.id };
-
-    if (status) {
-      whereClause.status = status;
-    }
-
-    if (upcoming === "true") {
-      whereClause.date = {
-        gte: new Date(),
-      };
-    }
-
-    const bookings = await prisma.booking.findMany({
-      where: whereClause,
-      include: {
-        room: true,
-      },
-      orderBy: {
-        date: "desc",
-      },
-    });
-
-    return NextResponse.json(bookings);
+    const userId = await getCurrentUserId();
+    const handler = new BookingHandler(container.bookingService);
+    return handler.getUserBookings(userId, userId);
   } catch (error) {
-    console.error("Error fetching user bookings:", error);
+    if (error instanceof ApplicationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.statusCode }
+      );
+    }
     return NextResponse.json(
-      { error: "Failed to fetch user bookings" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

@@ -1,78 +1,51 @@
+/**
+ * Rooms API Routes
+ * 
+ * Thin layer that delegates to RoomHandler.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { container } from "@/lib/container";
+import { RoomHandler } from "@/lib/http/handlers/RoomHandler";
+import { getCurrentUserId } from "@/lib/http/middleware/auth";
+import { ApplicationError } from "@/lib/errors";
 
 // GET /api/rooms - Get all rooms or filter by category
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const searchParams = request.nextUrl.searchParams;
-    const category = searchParams.get("category");
-
-    const rooms = await prisma.room.findMany({
-      where: category ? { category } : undefined,
-      orderBy: {
-        name: "asc",
-      },
-    });
-
-    return NextResponse.json(rooms);
+    // Just need to be authenticated to view rooms
+    await getCurrentUserId();
+    const handler = new RoomHandler(container.roomService);
+    return handler.getRooms(request);
   } catch (error) {
-    console.error("Error fetching rooms:", error);
+    if (error instanceof ApplicationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.statusCode }
+      );
+    }
     return NextResponse.json(
-      { error: "Failed to fetch rooms" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
-// POST /api/rooms - Create a new room (admin only - for future use)
+// POST /api/rooms - Create a new room (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Enforce admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-    if (!currentUser || currentUser.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const body = await request.json();
-    const { name, category, capacity, description } = body;
-
-    if (!name || !category || !capacity) {
+    const userId = await getCurrentUserId();
+    const handler = new RoomHandler(container.roomService);
+    return handler.createRoom(request, userId);
+  } catch (error) {
+    if (error instanceof ApplicationError) {
       return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
+        { error: error.message },
+        { status: error.statusCode }
       );
     }
-
-    const room = await prisma.room.create({
-      data: {
-        name,
-        category,
-        capacity,
-        description,
-      },
-    });
-
-    return NextResponse.json(room, { status: 201 });
-  } catch (error) {
-    console.error("Error creating room:", error);
     return NextResponse.json(
-      { error: "Failed to create room" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
