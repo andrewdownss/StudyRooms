@@ -13,12 +13,13 @@ import { ApplicationError } from "@/lib/errors";
 // GET /api/bookings/[id] - Get a specific booking
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const userId = await getCurrentUserId();
     const handler = new BookingHandler(container.bookingService);
-    return handler.getBooking(params.id, userId);
+    return handler.getBooking(id, userId);
   } catch (error) {
     if (error instanceof ApplicationError) {
       return NextResponse.json(
@@ -36,12 +37,13 @@ export async function GET(
 // PATCH /api/bookings/[id] - Update a booking status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const userId = await getCurrentUserId();
     const handler = new BookingHandler(container.bookingService);
-    return handler.updateBooking(request, params.id, userId);
+    return handler.updateBooking(request, id, userId);
   } catch (error) {
     if (error instanceof ApplicationError) {
       return NextResponse.json(
@@ -59,12 +61,13 @@ export async function PATCH(
 // DELETE /api/bookings/[id] - Delete a booking (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const userId = await getCurrentUserId();
     const handler = new BookingHandler(container.bookingService);
-    return handler.deleteBooking(params.id, userId);
+    return handler.deleteBooking(id, userId);
   } catch (error) {
     if (error instanceof ApplicationError) {
       return NextResponse.json(

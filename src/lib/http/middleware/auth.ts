@@ -13,7 +13,7 @@ import { UnauthorizedError, NotFoundError } from '../../errors';
  * Get the current authenticated user's ID
  * 
  * @throws {UnauthorizedError} if user is not authenticated
- * @throws {NotFoundError} if user is not found in database
+ * @throws {NotFoundError} if user is not found in database (fallback only)
  */
 export async function getCurrentUserId(): Promise<string> {
   const session = await getServerSession(authOptions);
@@ -22,6 +22,15 @@ export async function getCurrentUserId(): Promise<string> {
     throw new UnauthorizedError('Authentication required');
   }
 
+  // Try to get from session first (new way - fast!)
+  if (session.user.id) {
+    return session.user.id;
+  }
+
+  // Fallback for existing sessions that don't have userId in token yet
+  // This will only happen for users who were logged in before this change
+  // They'll get the userId added to their token on next login
+  console.warn('DEPRECATED: Fetching user ID from database. User should re-login to improve performance.');
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     select: { id: true },

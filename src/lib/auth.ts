@@ -86,13 +86,23 @@ export const authOptions: NextAuthOptions = {
       if (profile) {
         token.profile = profile;
       }
-      // Attach role from DB; use user on initial sign-in, otherwise look up by email
+      
+      // Cache user ID in token from initial sign-in
+      if (user?.id) {
+        token.userId = user.id;
+      }
+      
+      // Attach role and userId from DB; use user on initial sign-in, otherwise look up by email
       try {
         const email = (user?.email as string) || (token?.email as string);
         if (email) {
-          const dbUser = await prisma.user.findUnique({ where: { email } });
-          if (dbUser?.role) {
+          const dbUser = await prisma.user.findUnique({ 
+            where: { email },
+            select: { id: true, role: true }
+          });
+          if (dbUser) {
             token.role = dbUser.role;
+            token.userId = dbUser.id; // Cache userId in token
           }
         }
       } catch {
@@ -104,9 +114,10 @@ export const authOptions: NextAuthOptions = {
       // Send properties to the client, like an access_token and user id from a provider.
       session.accessToken = token.accessToken as string;
       session.idToken = token.idToken as string;
-      // Expose role on the session
+      // Expose role and userId on the session
       if (session.user) {
         session.user.role = token.role ?? "user";
+        session.user.id = token.userId as string; // Expose userId from token
       }
       return session;
     },
@@ -140,6 +151,7 @@ declare module "next-auth" {
     accessToken?: string;
     idToken?: string;
     user: {
+      id?: string; // User ID cached from JWT
       name?: string | null;
       email?: string | null;
       image?: string | null;
@@ -150,6 +162,7 @@ declare module "next-auth" {
 
 declare module "next-auth/jwt" {
   interface JWT {
+    userId?: string; // User ID cached in token
     accessToken?: string;
     idToken?: string;
     profile?: unknown;

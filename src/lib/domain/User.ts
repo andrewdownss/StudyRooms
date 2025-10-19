@@ -4,7 +4,7 @@
  * Rich domain object with business logic for users.
  */
 
-import { IUser, IUserEntity, IBooking, UserRole } from '../interfaces/domain';
+import { IUser, IUserEntity, IBooking, UserRole, AuthProvider } from '../interfaces/domain';
 
 export class UserEntity implements IUserEntity {
   id: string;
@@ -13,6 +13,8 @@ export class UserEntity implements IUserEntity {
   emailVerified: Date | null;
   image: string | null;
   role: UserRole;
+  password?: string | null;
+  authProvider: AuthProvider;
   createdAt?: Date;
   updatedAt?: Date;
 
@@ -23,6 +25,8 @@ export class UserEntity implements IUserEntity {
     this.emailVerified = data.emailVerified;
     this.image = data.image;
     this.role = data.role;
+    this.password = data.password;
+    this.authProvider = data.authProvider;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
   }
