@@ -1,14 +1,19 @@
 /**
  * Domain Interfaces
- * 
+ *
  * Define the shape of our core business entities.
  * These represent the "things" in our system.
  */
 
-export type BookingStatus = 'confirmed' | 'cancelled' | 'completed';
-export type RoomCategory = 'small' | 'large';
-export type UserRole = 'user' | 'admin' | 'organization';
-export type AuthProvider = 'google' | 'credentials';
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "cancelled"
+  | "completed"
+  | "rejected";
+export type RoomCategory = "small" | "large";
+export type UserRole = "user" | "admin" | "organization";
+export type AuthProvider = "google" | "credentials";
 
 // ============================================================================
 // USER DOMAIN
@@ -21,8 +26,8 @@ export interface IUser {
   emailVerified: Date | null;
   image: string | null;
   role: UserRole;
-  password?: string | null;  // Nullable - null for Google OAuth users
-  authProvider: AuthProvider;  // How the user authenticated
+  password?: string | null; // Nullable - null for Google OAuth users
+  authProvider: AuthProvider; // How the user authenticated
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -49,16 +54,41 @@ export interface IBooking {
   id: string;
   userId: string;
   roomId: string;
+  organizationId?: string;
   date: Date;
   startTime: string;
   duration: number;
   status: BookingStatus;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relations (optional - loaded when needed)
   user?: IUser;
   room?: IRoom;
+  organization?: IOrganization;
+}
+
+// ============================================================================
+// ORGANIZATION DOMAIN
+// ============================================================================
+
+export interface IOrganization {
+  id: string;
+  name: string;
+  slug: string;
+  status: "active" | "suspended";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IOrgMembership {
+  id: string;
+  userId: string;
+  organizationId: string;
+  role: "owner" | "officer" | "member";
+  createdAt: Date;
+  user?: IUser;
+  organization?: IOrganization;
 }
 
 // ============================================================================
@@ -75,7 +105,12 @@ export interface IBookingEntity extends IBooking {
 
 export interface IRoomEntity extends IRoom {
   canAccommodate(people: number): boolean;
-  isAvailable(date: Date, startTime: string, duration: number, existingBookings: IBooking[]): boolean;
+  isAvailable(
+    date: Date,
+    startTime: string,
+    duration: number,
+    existingBookings: IBooking[]
+  ): boolean;
 }
 
 export interface IUserEntity extends IUser {
@@ -84,4 +119,3 @@ export interface IUserEntity extends IUser {
   canManageBooking(booking: IBooking): boolean;
   canManageRoom(): boolean;
 }
-

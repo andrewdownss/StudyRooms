@@ -1,19 +1,19 @@
 /**
  * Booking HTTP Handler
- * 
+ *
  * Handles HTTP requests for booking operations.
  * Validates input, calls services, formats responses.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { BookingService } from '../../services/BookingService';
-import { 
-  BookingCreateSchema, 
-  BookingUpdateSchema, 
-  BookingQuerySchema 
-} from '../../validation/schemas';
-import { ApplicationError } from '../../errors';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { BookingService } from "../../services/BookingService";
+import {
+  BookingCreateSchema,
+  BookingUpdateSchema,
+  BookingQuerySchema,
+} from "../../validation/schemas";
+import { ApplicationError } from "../../errors";
+import { z } from "zod";
 
 export class BookingHandler {
   constructor(private bookingService: BookingService) {}
@@ -22,24 +22,32 @@ export class BookingHandler {
    * GET /api/bookings
    * Get all bookings (filtered by user role)
    */
-  async getBookings(request: NextRequest, userId: string): Promise<NextResponse> {
+  async getBookings(
+    request: NextRequest,
+    userId: string
+  ): Promise<NextResponse> {
     try {
       const searchParams = request.nextUrl.searchParams;
-      
+
       // Validate query parameters
       const query = BookingQuerySchema.parse({
-        limit: searchParams.get('limit') || undefined,
-        status: searchParams.get('status') || undefined,
-        upcoming: searchParams.get('upcoming') || undefined,
+        limit: searchParams.get("limit") || undefined,
+        status: searchParams.get("status") || undefined,
+        upcoming: searchParams.get("upcoming") || undefined,
+        date: searchParams.get("date") || undefined,
       });
 
       const options = {
         limit: query.limit,
         status: query.status,
-        upcoming: query.upcoming === 'true',
+        upcoming: query.upcoming === "true",
+        date: query.date,
       };
 
-      const bookings = await this.bookingService.getAllBookings(userId, options);
+      const bookings = await this.bookingService.getAllBookings(
+        userId,
+        options
+      );
 
       return NextResponse.json(bookings);
     } catch (error) {
@@ -51,14 +59,20 @@ export class BookingHandler {
    * POST /api/bookings
    * Create a new booking
    */
-  async createBooking(request: NextRequest, userId: string): Promise<NextResponse> {
+  async createBooking(
+    request: NextRequest,
+    userId: string
+  ): Promise<NextResponse> {
     try {
       const body = await request.json();
-      
+
       // Validate input
       const validatedInput = BookingCreateSchema.parse(body);
 
-      const booking = await this.bookingService.createBooking(userId, validatedInput);
+      const booking = await this.bookingService.createBooking(
+        userId,
+        validatedInput
+      );
 
       return NextResponse.json(booking, { status: 201 });
     } catch (error) {
@@ -90,7 +104,7 @@ export class BookingHandler {
   ): Promise<NextResponse> {
     try {
       const body = await request.json();
-      
+
       // Validate input
       const { status } = BookingUpdateSchema.parse(body);
 
@@ -110,7 +124,10 @@ export class BookingHandler {
    * DELETE /api/bookings/[id]
    * Delete a booking (admin only)
    */
-  async deleteBooking(bookingId: string, userId: string): Promise<NextResponse> {
+  async deleteBooking(
+    bookingId: string,
+    userId: string
+  ): Promise<NextResponse> {
     try {
       await this.bookingService.deleteBooking(bookingId, userId);
       return NextResponse.json({ success: true });
@@ -123,9 +140,15 @@ export class BookingHandler {
    * POST /api/bookings/[id]/cancel
    * Cancel a booking
    */
-  async cancelBooking(bookingId: string, userId: string): Promise<NextResponse> {
+  async cancelBooking(
+    bookingId: string,
+    userId: string
+  ): Promise<NextResponse> {
     try {
-      const booking = await this.bookingService.cancelBooking(bookingId, userId);
+      const booking = await this.bookingService.cancelBooking(
+        bookingId,
+        userId
+      );
       return NextResponse.json(booking);
     } catch (error) {
       return this.handleError(error);
@@ -136,9 +159,15 @@ export class BookingHandler {
    * GET /api/user/bookings
    * Get user's own bookings
    */
-  async getUserBookings(userId: string, requesterId: string): Promise<NextResponse> {
+  async getUserBookings(
+    userId: string,
+    requesterId: string
+  ): Promise<NextResponse> {
     try {
-      const bookings = await this.bookingService.getUserBookings(userId, requesterId);
+      const bookings = await this.bookingService.getUserBookings(
+        userId,
+        requesterId
+      );
       return NextResponse.json(bookings);
     } catch (error) {
       return this.handleError(error);
@@ -149,14 +178,14 @@ export class BookingHandler {
    * Handle errors and convert to appropriate HTTP responses
    */
   private handleError(error: unknown): NextResponse {
-    console.error('BookingHandler error:', error);
+    console.error("BookingHandler error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
-          error: 'Validation failed',
-          details: error.errors.map(e => ({
-            field: e.path.join('.'),
+          error: "Validation failed",
+          details: error.errors.map((e) => ({
+            field: e.path.join("."),
             message: e.message,
           })),
         },
@@ -176,10 +205,9 @@ export class BookingHandler {
 
     return NextResponse.json(
       {
-        error: 'Internal server error',
+        error: "Internal server error",
       },
       { status: 500 }
     );
   }
 }
-

@@ -20,6 +20,7 @@ interface Booking {
   duration: number;
   status: string;
   room: Room;
+  organization?: { id: string; name: string } | null;
 }
 
 export default function Dashboard() {
@@ -27,6 +28,9 @@ export default function Dashboard() {
   const router = useRouter();
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
+  const [orgBookingsWeek, setOrgBookingsWeek] = useState<
+    { date: string; bookings: Booking[] }[]
+  >([]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -56,11 +60,51 @@ export default function Dashboard() {
     }
   };
 
+  const fetchOrgBookingsWeek = async () => {
+    try {
+      const days: string[] = [];
+      const start = new Date();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        days.push(d.toISOString().split("T")[0]);
+      }
+
+      const results = await Promise.all(
+        days.map((d) => fetch(`/api/bookings?date=${d}`, { cache: "no-store" }))
+      );
+
+      const grouped: { date: string; bookings: Booking[] }[] = [];
+      for (let i = 0; i < results.length; i++) {
+        const res = results[i];
+        if (!res.ok) {
+          grouped.push({ date: days[i], bookings: [] });
+          continue;
+        }
+        const all: Booking[] = await res.json();
+        const filtered = all
+          .filter(
+            (b) =>
+              b.organization &&
+              (b.status === "confirmed" || b.status === "pending")
+          )
+          .sort((a, b) =>
+            a.startTime < b.startTime ? -1 : a.startTime > b.startTime ? 1 : 0
+          );
+        grouped.push({ date: days[i], bookings: filtered });
+      }
+
+      setOrgBookingsWeek(grouped);
+    } catch {
+      setOrgBookingsWeek([]);
+    }
+  };
+
   useEffect(() => {
     if (session?.user?.email) {
       fetchUserBookings();
+      fetchOrgBookingsWeek();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   if (status === "loading") {
@@ -267,8 +311,21 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Confirmed
+                        <span
+                          className={
+                            booking.status === "pending"
+                              ? "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                              : booking.status === "cancelled"
+                              ? "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700"
+                              : booking.status === "completed"
+                              ? "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                              : "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                          }
+                        >
+                          {booking.status === "pending"
+                            ? "Waiting for approval"
+                            : booking.status.charAt(0).toUpperCase() +
+                              booking.status.slice(1)}
                         </span>
                       </div>
                     </div>
@@ -363,6 +420,72 @@ export default function Dashboard() {
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
                     Book a room for your next study session.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Organization schedule (next 7 days) */}
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">
+                Organization Schedule (Next 7 Days)
+              </h3>
+            </div>
+            <div className="p-6">
+              {orgBookingsWeek.length > 0 ? (
+                <div className="space-y-6">
+                  {orgBookingsWeek.map((day) => (
+                    <div key={day.date}>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                        {new Date(day.date).toLocaleDateString(undefined, {
+                          weekday: "long",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </h4>
+                      {day.bookings.length > 0 ? (
+                        <div className="space-y-2">
+                          {day.bookings.map((booking) => (
+                            <div
+                              key={booking.id}
+                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            >
+                              <div>
+                                <p className="text-sm text-gray-900 font-medium">
+                                  {booking.organization?.name}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  {booking.room.name} at {booking.startTime}
+                                </p>
+                              </div>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  booking.status === "pending"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-green-100 text-green-800"
+                                }`}
+                              >
+                                {booking.status === "pending"
+                                  ? "Pending"
+                                  : "Confirmed"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500">
+                          No organization bookings.
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    No organization bookings this week.
                   </p>
                 </div>
               )}

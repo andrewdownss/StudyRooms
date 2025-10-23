@@ -39,17 +39,18 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?         @unique
   emailVerified DateTime?
   image         String?
-  role          String    @default("user") // "user" | "admin"
-  password      String?   // Nullable - null for Google OAuth users
-  authProvider  String    @default("google") // "google" | "credentials"
+  role          String          @default("user") // "user" | "admin"
+  password      String? // Nullable - null for Google OAuth users
+  authProvider  String          @default("google") // "google" | "credentials"
   accounts      Account[]
   sessions      Session[]
   bookings      Booking[] // Relation to bookings
+  memberships   OrgMembership[]
 }
 
 model VerificationToken {
@@ -73,20 +74,51 @@ model Room {
 }
 
 model Booking {
-  id        String   @id @default(cuid())
-  userId    String
-  roomId    String
-  date      DateTime
-  startTime String // Store as 24-hour format (e.g., "14:00")
-  duration  Int // Duration in minutes
-  status    String   @default("confirmed") // confirmed, cancelled, completed
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  roomId         String
+  organizationId String?
+  date           DateTime
+  startTime      String // Store as 24-hour format (e.g., "14:00")
+  duration       Int // Duration in minutes
+  status         String   @default("confirmed") // pending, confirmed, cancelled, completed, rejected
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room         Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id])
 
   @@index([userId])
   @@index([roomId])
   @@index([date])
+  @@index([organizationId])
+}
+
+// Organizations & Memberships
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  status    String   @default("active") // active, suspended
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships OrgMembership[]
+  bookings    Booking[]
+}
+
+model OrgMembership {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String   @default("member") // owner, officer, member
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
 }

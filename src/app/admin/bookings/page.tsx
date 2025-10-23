@@ -25,6 +25,7 @@ interface AdminBooking {
   status: string;
   user: AdminUser;
   room: AdminRoom;
+  organization?: { id: string; name: string } | null;
 }
 
 export default function AdminBookingsPage() {
@@ -98,6 +99,40 @@ export default function AdminBookingsPage() {
     }
   }
 
+  async function approveBooking(bookingId: string) {
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "confirmed" }),
+      });
+      if (!res.ok) throw new Error("Failed to approve booking");
+      const updated = await res.json();
+      setBookings((prev) =>
+        prev.map((b) => (b.id === updated.id ? updated : b))
+      );
+    } catch {
+      alert("Error approving booking");
+    }
+  }
+
+  async function rejectBooking(bookingId: string) {
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "rejected" }),
+      });
+      if (!res.ok) throw new Error("Failed to reject booking");
+      const updated = await res.json();
+      setBookings((prev) =>
+        prev.map((b) => (b.id === updated.id ? updated : b))
+      );
+    } catch {
+      alert("Error rejecting booking");
+    }
+  }
+
   const filteredBookings = useMemo(
     function filter() {
       if (statusFilter === "all") return bookings;
@@ -151,6 +186,12 @@ export default function AdminBookingsPage() {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/admin/organizations"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Organizations
+              </Link>
             </div>
           </div>
         </div>
@@ -165,9 +206,11 @@ export default function AdminBookingsPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="all">All</option>
+            <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
             <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
           </select>
           <div className="ml-auto text-sm text-gray-500">
             {filteredBookings.length} bookings
@@ -270,6 +313,22 @@ export default function AdminBookingsPage() {
                             >
                               Cancel
                             </button>
+                          )}
+                          {b.status === "pending" && (
+                            <div className="space-x-2">
+                              <button
+                                onClick={() => approveBooking(b.id)}
+                                className="text-green-700 text-xs hover:underline"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => rejectBooking(b.id)}
+                                className="text-red-700 text-xs hover:underline"
+                              >
+                                Reject
+                              </button>
+                            </div>
                           )}
                           <button
                             onClick={() => deleteBooking(b.id)}

@@ -1,19 +1,19 @@
 /**
  * Booking Repository Implementation
- * 
+ *
  * Handles all database operations for bookings using Prisma.
  * Abstracts away Prisma implementation details.
  */
 
-import { prisma } from '../prisma';
-import { 
-  IBookingRepository, 
-  BookingCreateData, 
-  BookingFilters, 
-  FindAllOptions 
-} from '../interfaces/repositories';
-import { IBooking, BookingStatus } from '../interfaces/domain';
-import { NotFoundError } from '../errors';
+import { prisma } from "../prisma";
+import {
+  IBookingRepository,
+  BookingCreateData,
+  BookingFilters,
+  FindAllOptions,
+} from "../interfaces/repositories";
+import { IBooking, BookingStatus } from "../interfaces/domain";
+import { NotFoundError } from "../errors";
 
 export class BookingRepository implements IBookingRepository {
   /**
@@ -24,14 +24,16 @@ export class BookingRepository implements IBookingRepository {
       data: {
         userId: data.userId,
         roomId: data.roomId,
+        ...(data.organizationId && { organizationId: data.organizationId }),
         date: data.date,
         startTime: data.startTime,
         duration: data.duration,
-        status: data.status || 'confirmed',
+        status: data.status || "confirmed",
       },
       include: {
         user: true,
         room: true,
+        organization: true,
       },
     });
 
@@ -47,6 +49,7 @@ export class BookingRepository implements IBookingRepository {
       include: {
         user: true,
         room: true,
+        organization: true,
       },
     });
 
@@ -62,9 +65,10 @@ export class BookingRepository implements IBookingRepository {
       include: {
         user: true,
         room: true,
+        organization: true,
       },
       orderBy: {
-        date: 'desc',
+        date: "desc",
       },
     });
 
@@ -84,9 +88,10 @@ export class BookingRepository implements IBookingRepository {
       include: {
         user: true,
         room: true,
+        organization: true,
       },
       orderBy: {
-        startTime: 'asc',
+        startTime: "asc",
       },
     });
 
@@ -108,9 +113,10 @@ export class BookingRepository implements IBookingRepository {
       include: {
         user: true,
         room: true,
+        organization: true,
       },
       orderBy: {
-        date: 'asc',
+        date: "asc",
       },
     });
 
@@ -129,14 +135,14 @@ export class BookingRepository implements IBookingRepository {
         date: {
           gte: now,
         },
-        status: 'confirmed',
+        status: "confirmed",
       },
       include: {
         user: true,
         room: true,
       },
       orderBy: {
-        date: 'asc',
+        date: "asc",
       },
     });
 
@@ -176,11 +182,12 @@ export class BookingRepository implements IBookingRepository {
       take: options?.limit,
       skip: options?.offset,
       orderBy: {
-        [options?.orderBy || 'createdAt']: options?.orderDirection || 'desc',
+        [options?.orderBy || "createdAt"]: options?.orderDirection || "desc",
       },
       include: {
         user: options?.includeUser !== false,
         room: options?.includeRoom !== false,
+        organization: true,
       },
     });
 
@@ -199,11 +206,15 @@ export class BookingRepository implements IBookingRepository {
         ...(data.date && { date: data.date }),
         ...(data.startTime && { startTime: data.startTime }),
         ...(data.duration && { duration: data.duration }),
+        ...(data.organizationId !== undefined && {
+          organizationId: data.organizationId,
+        }),
         updatedAt: new Date(),
       },
       include: {
         user: true,
         room: true,
+        organization: true,
       },
     });
 
@@ -223,6 +234,7 @@ export class BookingRepository implements IBookingRepository {
       include: {
         user: true,
         room: true,
+        organization: true,
       },
     });
 
@@ -272,6 +284,7 @@ export class BookingRepository implements IBookingRepository {
       id: prismaBooking.id,
       userId: prismaBooking.userId,
       roomId: prismaBooking.roomId,
+      organizationId: prismaBooking.organizationId || undefined,
       date: prismaBooking.date,
       startTime: prismaBooking.startTime,
       duration: prismaBooking.duration,
@@ -280,6 +293,9 @@ export class BookingRepository implements IBookingRepository {
       updatedAt: prismaBooking.updatedAt,
       ...(prismaBooking.user && { user: prismaBooking.user }),
       ...(prismaBooking.room && { room: prismaBooking.room }),
+      ...(prismaBooking.organization && {
+        organization: prismaBooking.organization,
+      }),
     };
   }
 }

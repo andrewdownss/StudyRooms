@@ -43,6 +43,10 @@ export default function BookRoomPage() {
   const [bookingDate, setBookingDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [duration, setDuration] = useState(60);
+  const [organizations, setOrganizations] = useState<
+    { id: string; name: string; slug: string; role?: string }[]
+  >([]);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -54,19 +58,26 @@ export default function BookRoomPage() {
     if (session?.user?.email) {
       fetchRoomCategories();
       fetchRecentBookings();
+      fetchOrganizations();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   const fetchRoomCategories = async () => {
     try {
-      const response = await fetch("/api/rooms/categories");
-      if (response.ok) {
-        const categories = await response.json();
-        setRoomCategories(categories);
+      const response = await fetch("/api/rooms/categories", {
+        cache: "no-store",
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.error || "Failed to load room categories");
+        setRoomCategories([]);
+        return;
       }
+      const categories = await response.json();
+      setRoomCategories(categories);
     } catch (error) {
       console.error("Error fetching room categories:", error);
+      setError("Could not load room categories");
     }
   };
 
@@ -79,6 +90,18 @@ export default function BookRoomPage() {
       }
     } catch (error) {
       console.error("Error fetching recent bookings:", error);
+    }
+  };
+
+  const fetchOrganizations = async () => {
+    try {
+      const res = await fetch("/api/organizations", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setOrganizations(data);
+      }
+    } catch {
+      // noop
     }
   };
 
@@ -107,6 +130,7 @@ export default function BookRoomPage() {
           date: bookingDate,
           startTime,
           duration,
+          ...(organizationId ? { organizationId } : {}),
         }),
       });
 
@@ -125,6 +149,7 @@ export default function BookRoomPage() {
         setBookingDate("");
         setStartTime("");
         setDuration(60);
+        setOrganizationId(null);
         fetchRecentBookings();
       } else {
         const errorData = await response.json();
@@ -241,24 +266,28 @@ export default function BookRoomPage() {
         {step === 1 && (
           <div>
             <h2 className="text-2xl font-bold mb-6">Select Room Type</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {roomCategories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategorySelect(category.id)}
-                  className="bg-white rounded-lg shadow-sm p-6 text-left hover:shadow-md transition-shadow border-2 border-transparent hover:border-red-800"
-                >
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {category.name}
-                  </h3>
-                  <p className="text-gray-700 mb-2">{category.description}</p>
-                  <p className="text-gray-500">{category.capacity}</p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {category.count} rooms available
-                  </p>
-                </button>
-              ))}
-            </div>
+            {roomCategories.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-6">
+                {roomCategories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => handleCategorySelect(category.id)}
+                    className="bg-white rounded-lg shadow-sm p-6 text-left hover:shadow-md transition-shadow border-2 border-transparent hover:border-red-800"
+                  >
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {category.name}
+                    </h3>
+                    <p className="text-gray-700 mb-2">{category.description}</p>
+                    <p className="text-gray-500">{category.capacity}</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {category.count} rooms available
+                    </p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-gray-600">No room types available.</div>
+            )}
           </div>
         )}
 
@@ -277,6 +306,29 @@ export default function BookRoomPage() {
               </div>
 
               <div className="space-y-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Book on behalf of organization (optional)
+                  </label>
+                  <select
+                    value={organizationId || ""}
+                    onChange={(e) => setOrganizationId(e.target.value || null)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
+                  >
+                    <option value="">Personal booking</option>
+                    {organizations.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </select>
+                  {organizationId && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Organization bookings are submitted for admin approval and
+                      will appear as pending until approved.
+                    </p>
+                  )}
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Date

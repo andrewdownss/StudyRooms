@@ -1,32 +1,41 @@
 /**
  * Dependency Injection Container
- * 
+ *
  * Creates and wires up all services and repositories.
  * This implements the Singleton pattern and provides dependency injection.
  */
 
-import { BookingRepository } from './repositories/BookingRepository';
-import { RoomRepository } from './repositories/RoomRepository';
-import { UserRepository } from './repositories/UserRepository';
-import { AuthorizationService } from './services/AuthorizationService';
-import { BookingService } from './services/BookingService';
-import { RoomService } from './services/RoomService';
-import { UserService } from './services/UserService';
-import { CredentialsAuthService } from './services/CredentialsAuthService';
+import { BookingRepository } from "./repositories/BookingRepository";
+import { RoomRepository } from "./repositories/RoomRepository";
+import { UserRepository } from "./repositories/UserRepository";
+import { AuthorizationService } from "./services/AuthorizationService";
+import { BookingService } from "./services/BookingService";
+import { RoomService } from "./services/RoomService";
+import { UserService } from "./services/UserService";
+import { CredentialsAuthService } from "./services/CredentialsAuthService";
+import {
+  IOrganizationRepository,
+  IOrgMembershipRepository,
+} from "./interfaces/repositories";
+// Placeholder imports for future repository implementations
+// import { OrganizationRepository } from './repositories/OrganizationRepository';
+// import { OrgMembershipRepository } from './repositories/OrgMembershipRepository';
 
 /**
  * Service Container
- * 
+ *
  * Lazy-loads and caches service instances using singleton pattern.
  */
 class Container {
   private static instance: Container;
-  
+
   // Repositories
   private _bookingRepository?: BookingRepository;
   private _roomRepository?: RoomRepository;
   private _userRepository?: UserRepository;
-  
+  // private _organizationRepository?: OrganizationRepository;
+  // private _orgMembershipRepository?: OrgMembershipRepository;
+
   // Services
   private _authorizationService?: AuthorizationService;
   private _bookingService?: BookingService;
@@ -53,6 +62,8 @@ class Container {
     this._bookingRepository = undefined;
     this._roomRepository = undefined;
     this._userRepository = undefined;
+    // this._organizationRepository = undefined;
+    // this._orgMembershipRepository = undefined;
     this._authorizationService = undefined;
     this._bookingService = undefined;
     this._roomService = undefined;
@@ -84,6 +95,20 @@ class Container {
     }
     return this._userRepository;
   }
+
+  // get organizationRepository(): OrganizationRepository {
+  //   if (!this._organizationRepository) {
+  //     this._organizationRepository = new OrganizationRepository();
+  //   }
+  //   return this._organizationRepository;
+  // }
+
+  // get orgMembershipRepository(): OrgMembershipRepository {
+  //   if (!this._orgMembershipRepository) {
+  //     this._orgMembershipRepository = new OrgMembershipRepository();
+  //   }
+  //   return this._orgMembershipRepository;
+  // }
 
   // ============================================================================
   // SERVICES
@@ -144,4 +169,3 @@ class Container {
  * Export singleton instance
  */
 export const container = Container.getInstance();
-

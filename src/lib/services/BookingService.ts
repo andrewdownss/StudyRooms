@@ -1,22 +1,35 @@
 /**
  * Booking Service
- * 
+ *
  * Implements booking business logic with authorization.
  * Orchestrates repositories and domain models.
  */
 
-import { IBookingService, BookingServiceCreateInput, GetBookingsOptions } from '../interfaces/services';
-import { IBookingRepository, IRoomRepository, IUserRepository } from '../interfaces/repositories';
-import { IAuthorizationService } from '../interfaces/services';
-import { IBooking, IRoom, BookingStatus, RoomCategory } from '../interfaces/domain';
-import { BookingEntity } from '../domain/Booking';
-import { UserEntity } from '../domain/User';
-import { 
-  NotFoundError, 
-  ForbiddenError, 
-  ConflictError, 
-  ValidationError 
-} from '../errors';
+import {
+  IBookingService,
+  BookingServiceCreateInput,
+  GetBookingsOptions,
+} from "../interfaces/services";
+import {
+  IBookingRepository,
+  IRoomRepository,
+  IUserRepository,
+} from "../interfaces/repositories";
+import { IAuthorizationService } from "../interfaces/services";
+import {
+  IBooking,
+  IRoom,
+  BookingStatus,
+  RoomCategory,
+} from "../interfaces/domain";
+import { BookingEntity } from "../domain/Booking";
+import { UserEntity } from "../domain/User";
+import {
+  NotFoundError,
+  ForbiddenError,
+  ConflictError,
+  ValidationError,
+} from "../errors";
 
 export class BookingService implements IBookingService {
   constructor(
@@ -39,12 +52,12 @@ export class BookingService implements IBookingService {
       date,
       startTime: input.startTime,
       duration: input.duration,
-    } as any);
+    } as unknown as Partial<IBooking>);
 
     // 2. Get user to check role-specific limits
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new NotFoundError('User not found');
+      throw new NotFoundError("User not found");
     }
 
     const userEntity = UserEntity.fromData(user);
@@ -58,11 +71,15 @@ export class BookingService implements IBookingService {
 
     // 4. Check daily booking limit
     const userBookingsToday = await this.bookingRepository.findByUser(userId);
-    const todayBookings = userBookingsToday.filter(b => 
-      b.date.toDateString() === date.toDateString() && 
-      b.status === 'confirmed'
+    const todayBookings = userBookingsToday.filter(
+      (b) =>
+        b.date.toDateString() === date.toDateString() &&
+        b.status === "confirmed"
     );
-    const totalMinutesToday = todayBookings.reduce((sum, b) => sum + b.duration, 0);
+    const totalMinutesToday = todayBookings.reduce(
+      (sum, b) => sum + b.duration,
+      0
+    );
     const dailyLimit = userEntity.getDailyBookingLimit();
 
     if (totalMinutesToday + input.duration > dailyLimit) {
@@ -82,21 +99,29 @@ export class BookingService implements IBookingService {
 
     if (availableRooms.length === 0) {
       throw new ConflictError(
-        'No rooms available for the selected time slot. Please try a different time.'
+        "No rooms available for the selected time slot. Please try a different time."
       );
     }
 
     // 6. Select the first available room
     const room = availableRooms[0];
 
-    // 7. Create the booking
+    // 7. Determine status based on organization booking
+    const isOrgBooking =
+      input.organizationId !== undefined && input.organizationId !== null;
+    const status: BookingStatus = isOrgBooking ? "pending" : "confirmed";
+
+    // 7a. No membership enforcement: all org bookings require admin approval and start as pending
+
+    // 8. Create the booking
     const booking = await this.bookingRepository.create({
       userId,
       roomId: room.id,
+      organizationId: input.organizationId,
       date,
       startTime: input.startTime,
       duration: input.duration,
-      status: 'confirmed',
+      status,
     });
 
     return booking;
@@ -107,9 +132,9 @@ export class BookingService implements IBookingService {
    */
   async getBooking(bookingId: string, requesterId: string): Promise<IBooking> {
     const booking = await this.bookingRepository.findById(bookingId);
-    
+
     if (!booking) {
-      throw new NotFoundError('Booking not found');
+      throw new NotFoundError("Booking not found");
     }
 
     // Check authorization
@@ -121,12 +146,17 @@ export class BookingService implements IBookingService {
   /**
    * Get user's bookings with authorization
    */
-  async getUserBookings(userId: string, requesterId: string): Promise<IBooking[]> {
+  async getUserBookings(
+    userId: string,
+    requesterId: string
+  ): Promise<IBooking[]> {
     // Users can view their own bookings, admins can view any user's bookings
     if (userId !== requesterId) {
-      const canManage = await this.authorizationService.canManageUsers(requesterId);
+      const canManage = await this.authorizationService.canManageUsers(
+        requesterId
+      );
       if (!canManage) {
-        throw new ForbiddenError('You can only view your own bookings');
+        throw new ForbiddenError("You can only view your own bookings");
       }
     }
 
@@ -136,17 +166,27 @@ export class BookingService implements IBookingService {
   /**
    * Get all bookings (admin only) or user's own bookings
    */
-  async getAllBookings(requesterId: string, options?: GetBookingsOptions): Promise<IBooking[]> {
+  async getAllBookings(
+    requesterId: string,
+    options?: GetBookingsOptions
+  ): Promise<IBooking[]> {
     const user = await this.userRepository.findById(requesterId);
     if (!user) {
-      throw new NotFoundError('User not found');
+      throw new NotFoundError("User not found");
     }
 
     const userEntity = UserEntity.fromData(user);
     const isAdmin = userEntity.isAdmin();
 
     // Build filters
-    const filters: any = {
+    const filters: {
+      userId?: string;
+      roomId?: string;
+      status?: BookingStatus;
+      date?: Date;
+      startDate?: Date;
+      endDate?: Date;
+    } = {
       ...(options?.status && { status: options.status }),
       ...(!isAdmin && { userId: requesterId }), // Non-admins can only see their own
     };
@@ -156,13 +196,21 @@ export class BookingService implements IBookingService {
       filters.startDate = new Date();
     }
 
+    // Add exact date filter (YYYY-MM-DD)
+    if (options?.date) {
+      const start = new Date(options.date + "T00:00:00");
+      const end = new Date(options.date + "T23:59:59");
+      filters.startDate = start;
+      filters.endDate = end;
+    }
+
     const bookings = await this.bookingRepository.findAll({
       limit: options?.limit,
       filters,
       includeUser: isAdmin, // Only include user details for admins
       includeRoom: true,
-      orderBy: 'date',
-      orderDirection: 'desc',
+      orderBy: "date",
+      orderDirection: "desc",
     });
 
     return bookings;
@@ -173,28 +221,33 @@ export class BookingService implements IBookingService {
    */
   async cancelBooking(bookingId: string, userId: string): Promise<IBooking> {
     const booking = await this.bookingRepository.findById(bookingId);
-    
+
     if (!booking) {
-      throw new NotFoundError('Booking not found');
+      throw new NotFoundError("Booking not found");
     }
 
     // Check authorization
-    const canCancel = await this.authorizationService.canCancelBooking(userId, booking);
+    const canCancel = await this.authorizationService.canCancelBooking(
+      userId,
+      booking
+    );
     if (!canCancel) {
-      throw new ForbiddenError('You do not have permission to cancel this booking');
+      throw new ForbiddenError(
+        "You do not have permission to cancel this booking"
+      );
     }
 
     // Use domain model to cancel
     const bookingEntity = BookingEntity.fromData(booking);
-    
+
     if (!bookingEntity.canBeCancelled()) {
-      throw new ValidationError('This booking cannot be cancelled');
+      throw new ValidationError("This booking cannot be cancelled");
     }
 
     bookingEntity.cancel();
 
     // Update in database
-    return this.bookingRepository.updateStatus(bookingId, 'cancelled');
+    return this.bookingRepository.updateStatus(bookingId, "cancelled");
   }
 
   /**
@@ -206,9 +259,9 @@ export class BookingService implements IBookingService {
     requesterId: string
   ): Promise<IBooking> {
     const booking = await this.bookingRepository.findById(bookingId);
-    
+
     if (!booking) {
-      throw new NotFoundError('Booking not found');
+      throw new NotFoundError("Booking not found");
     }
 
     // Enforce admin-only modification
@@ -222,15 +275,18 @@ export class BookingService implements IBookingService {
    */
   async deleteBooking(bookingId: string, requesterId: string): Promise<void> {
     const booking = await this.bookingRepository.findById(bookingId);
-    
+
     if (!booking) {
-      throw new NotFoundError('Booking not found');
+      throw new NotFoundError("Booking not found");
     }
 
     // Check authorization
-    const canDelete = await this.authorizationService.canDeleteBooking(requesterId, booking);
+    const canDelete = await this.authorizationService.canDeleteBooking(
+      requesterId,
+      booking
+    );
     if (!canDelete) {
-      throw new ForbiddenError('Only administrators can delete bookings');
+      throw new ForbiddenError("Only administrators can delete bookings");
     }
 
     await this.bookingRepository.delete(bookingId);
@@ -263,7 +319,11 @@ export class BookingService implements IBookingService {
     startTime: string,
     duration: number
   ): Promise<IRoom[]> {
-    return this.roomRepository.findAvailable(category, date, startTime, duration);
+    return this.roomRepository.findAvailable(
+      category,
+      date,
+      startTime,
+      duration
+    );
   }
 }
-
