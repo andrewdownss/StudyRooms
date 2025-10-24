@@ -192,6 +192,12 @@ export default function AdminBookingsPage() {
               >
                 Organizations
               </Link>
+              <Link
+                href="/admin/test-timeslots"
+                className="bg-purple-800 text-white hover:bg-purple-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                🧪 Test TimeSlots
+              </Link>
             </div>
           </div>
         </div>

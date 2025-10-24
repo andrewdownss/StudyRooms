@@ -17,6 +17,11 @@ import {
   IOrganizationRepository,
   IOrgMembershipRepository,
 } from "./interfaces/repositories";
+
+// TimeSlot System Imports (NEW)
+import { TimeSlotBookingService } from "./services/timeslot/TimeSlotBookingService";
+import { ScheduleFactory } from "./domain/timeslot/presentation/ScheduleFactory";
+
 // Placeholder imports for future repository implementations
 // import { OrganizationRepository } from './repositories/OrganizationRepository';
 // import { OrgMembershipRepository } from './repositories/OrgMembershipRepository';
@@ -42,6 +47,10 @@ class Container {
   private _roomService?: RoomService;
   private _userService?: UserService;
   private _credentialsAuthService?: CredentialsAuthService;
+
+  // TimeSlot System Services (NEW)
+  private _timeSlotBookingService?: TimeSlotBookingService;
+  private _scheduleFactory?: ScheduleFactory;
 
   private constructor() {}
 
@@ -69,6 +78,8 @@ class Container {
     this._roomService = undefined;
     this._userService = undefined;
     this._credentialsAuthService = undefined;
+    this._timeSlotBookingService = undefined;
+    this._scheduleFactory = undefined;
   }
 
   // ============================================================================
@@ -111,7 +122,7 @@ class Container {
   // }
 
   // ============================================================================
-  // SERVICES
+  // SERVICES (Legacy)
   // ============================================================================
 
   get authorizationService(): AuthorizationService {
@@ -162,6 +173,42 @@ class Container {
       );
     }
     return this._credentialsAuthService;
+  }
+
+  // ============================================================================
+  // TIMESLOT SERVICES (NEW)
+  // ============================================================================
+
+  /**
+   * Get TimeSlot Booking Service
+   * New booking system with TimeSlot domain model
+   * Optionally includes legacy service for comparison
+   */
+  get timeSlotBookingService(): TimeSlotBookingService {
+    if (!this._timeSlotBookingService) {
+      this._timeSlotBookingService = new TimeSlotBookingService(
+        this.bookingRepository,
+        this.roomRepository,
+        this.userRepository,
+        this.bookingService // Include legacy service for comparison
+      );
+    }
+    return this._timeSlotBookingService;
+  }
+
+  /**
+   * Get Schedule Factory
+   * Factory for creating schedule controllers and views
+   */
+  get scheduleFactory(): ScheduleFactory {
+    if (!this._scheduleFactory) {
+      this._scheduleFactory = new ScheduleFactory(
+        this.timeSlotBookingService,
+        this.roomRepository,
+        this.bookingRepository
+      );
+    }
+    return this._scheduleFactory;
   }
 }
 

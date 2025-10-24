@@ -80,11 +80,13 @@ export class BookingRepository implements IBookingRepository {
    * Find all bookings for a room
    */
   async findByRoom(roomId: string, date?: Date): Promise<IBooking[]> {
+    const where: any = { roomId };
+    if (date) {
+      where.date = date;
+    }
+
     const bookings = await prisma.booking.findMany({
-      where: {
-        roomId,
-        ...(date && { date }),
-      },
+      where,
       include: {
         user: true,
         room: true,
