@@ -17,6 +17,49 @@ const bookingSchema = z.object({
   organizationId: z.string().optional(),
 });
 
+// GET /api/v2/bookings - List bookings (admin sees all, users see their own)
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const limit = searchParams.get("limit")
+      ? parseInt(searchParams.get("limit")!)
+      : undefined;
+    const date = searchParams.get("date")
+      ? new Date(searchParams.get("date")!)
+      : undefined;
+
+    const user = await container.userRepository.findByEmail(session.user.email);
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Admin sees all bookings, regular users see only their own
+    const bookings =
+      user.role === "admin"
+        ? await container.bookingRepository.findAll({
+            limit,
+            filters: date ? { date } : undefined,
+            orderBy: "date",
+            orderDirection: "desc",
+          })
+        : await container.bookingRepository.findByUser(user.id);
+
+    return NextResponse.json(bookings);
+  } catch (error: any) {
+    console.error("Error fetching bookings:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to fetch bookings" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
