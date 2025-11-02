@@ -41,7 +41,7 @@ export default function Dashboard() {
   const fetchUserBookings = async () => {
     try {
       // Fetch recent bookings
-      const recentResponse = await fetch("/api/user/bookings");
+      const recentResponse = await fetch("/api/v2/user/bookings");
       if (recentResponse.ok) {
         const bookings = await recentResponse.json();
         setUserBookings(bookings.slice(0, 3));
@@ -49,7 +49,7 @@ export default function Dashboard() {
 
       // Fetch upcoming bookings
       const upcomingResponse = await fetch(
-        "/api/user/bookings?upcoming=true&status=confirmed"
+        "/api/v2/user/bookings?upcoming=true&status=confirmed"
       );
       if (upcomingResponse.ok) {
         const bookings = await upcomingResponse.json();
@@ -71,7 +71,7 @@ export default function Dashboard() {
       }
 
       const results = await Promise.all(
-        days.map((d) => fetch(`/api/bookings?date=${d}`, { cache: "no-store" }))
+        days.map((d) => fetch(`/api/v2/bookings?date=${d}`, { cache: "no-store" }))
       );
 
       const grouped: { date: string; bookings: Booking[] }[] = [];
