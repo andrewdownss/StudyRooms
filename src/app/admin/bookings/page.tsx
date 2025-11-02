@@ -46,7 +46,7 @@ export default function AdminBookingsPage() {
         try {
           setIsLoading(true);
           setHasError(null);
-          const res = await fetch("/api/bookings?limit=200", {
+          const res = await fetch("/api/v2/bookings?limit=200", {
             cache: "no-store",
           });
           if (!res.ok) {
@@ -72,7 +72,7 @@ export default function AdminBookingsPage() {
 
   async function cancelBooking(bookingId: string) {
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
+      const res = await fetch(`/api/v2/bookings/${bookingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "cancelled" }),
@@ -89,7 +89,7 @@ export default function AdminBookingsPage() {
 
   async function deleteBooking(bookingId: string) {
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
+      const res = await fetch(`/api/v2/bookings/${bookingId}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete booking");
