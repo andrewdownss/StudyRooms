@@ -9,7 +9,6 @@ import { BookingRepository } from "./repositories/BookingRepository";
 import { RoomRepository } from "./repositories/RoomRepository";
 import { UserRepository } from "./repositories/UserRepository";
 import { AuthorizationService } from "./services/AuthorizationService";
-import { BookingService } from "./services/BookingService";
 import { RoomService } from "./services/RoomService";
 import { UserService } from "./services/UserService";
 import { CredentialsAuthService } from "./services/CredentialsAuthService";
@@ -43,7 +42,6 @@ class Container {
 
   // Services
   private _authorizationService?: AuthorizationService;
-  private _bookingService?: BookingService;
   private _roomService?: RoomService;
   private _userService?: UserService;
   private _credentialsAuthService?: CredentialsAuthService;
@@ -74,7 +72,6 @@ class Container {
     // this._organizationRepository = undefined;
     // this._orgMembershipRepository = undefined;
     this._authorizationService = undefined;
-    this._bookingService = undefined;
     this._roomService = undefined;
     this._userService = undefined;
     this._credentialsAuthService = undefined;
@@ -132,18 +129,6 @@ class Container {
       );
     }
     return this._authorizationService;
-  }
-
-  get bookingService(): BookingService {
-    if (!this._bookingService) {
-      this._bookingService = new BookingService(
-        this.bookingRepository,
-        this.roomRepository,
-        this.userRepository,
-        this.authorizationService
-      );
-    }
-    return this._bookingService;
   }
 
   get roomService(): RoomService {
