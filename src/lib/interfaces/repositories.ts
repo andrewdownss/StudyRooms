@@ -23,6 +23,7 @@ export interface IBookingRepository {
   findByDateRange(startDate: Date, endDate: Date): Promise<IBooking[]>;
   findUpcoming(userId: string): Promise<IBooking[]>;
   findAll(options?: FindAllOptions): Promise<IBooking[]>;
+  findPublicBookings(date?: Date): Promise<IBooking[]>;
 
   // Update
   update(id: string, data: Partial<IBooking>): Promise<IBooking>;
@@ -30,6 +31,10 @@ export interface IBookingRepository {
 
   // Delete
   delete(id: string): Promise<void>;
+
+  // Participant Management
+  addParticipant(bookingId: string, userId: string): Promise<void>;
+  removeParticipant(bookingId: string, userId: string): Promise<void>;
 
   // Query helpers
   count(filters?: BookingFilters): Promise<number>;
@@ -44,6 +49,10 @@ export interface BookingCreateData {
   startTime: string;
   duration: number;
   status?: BookingStatus;
+  visibility?: 'private' | 'public' | 'org';
+  maxParticipants?: number;
+  title?: string;
+  description?: string;
 }
 
 export interface BookingFilters {
@@ -53,6 +62,7 @@ export interface BookingFilters {
   date?: Date;
   startDate?: Date;
   endDate?: Date;
+  visibility?: 'private' | 'public' | 'org';
 }
 
 export interface FindAllOptions {

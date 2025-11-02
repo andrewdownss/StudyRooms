@@ -43,6 +43,10 @@ export interface TimeSlotBookingInput {
   date: Date;
   timeRange: TimeRange;
   organizationId?: string;
+  visibility?: 'private' | 'public' | 'org';
+  maxParticipants?: number;
+  title?: string;
+  description?: string;
 }
 
 /**
@@ -147,7 +151,20 @@ export class TimeSlotBookingService implements ITimeSlotBookingService {
     // 8. Determine status
     const status: BookingStatus = input.organizationId ? "pending" : "confirmed";
 
-    // 9. Convert to legacy format and create booking
+    // 9. Validate public booking requirements
+    if (input.visibility === 'public' || input.visibility === 'org') {
+      if (!input.title || input.title.trim().length === 0) {
+        throw new ValidationError('Title is required for public/organization bookings');
+      }
+      if (!input.maxParticipants || input.maxParticipants < 1) {
+        throw new ValidationError('Max participants must be at least 1');
+      }
+      if (input.maxParticipants > room.capacity) {
+        throw new ValidationError(`Max participants cannot exceed room capacity (${room.capacity})`);
+      }
+    }
+
+    // 10. Convert to legacy format and create booking
     const legacy = input.timeRange.toLegacy();
     const booking = await this.bookingRepository.create({
       userId: input.userId,
@@ -157,6 +174,10 @@ export class TimeSlotBookingService implements ITimeSlotBookingService {
       startTime: legacy.startTime,
       duration: legacy.duration,
       status,
+      visibility: input.visibility || 'private',
+      maxParticipants: input.maxParticipants || 1,
+      title: input.title,
+      description: input.description,
     });
 
     return booking;

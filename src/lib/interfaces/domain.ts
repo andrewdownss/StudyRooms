@@ -50,6 +50,15 @@ export interface IRoom {
 // BOOKING DOMAIN
 // ============================================================================
 
+export interface IBookingParticipant {
+  id: string;
+  bookingId: string;
+  userId: string;
+  role: 'creator' | 'participant';
+  joinedAt: Date;
+  user?: IUser;
+}
+
 export interface IBooking {
   id: string;
   userId: string;
@@ -62,10 +71,17 @@ export interface IBooking {
   createdAt: Date;
   updatedAt: Date;
 
+  // Public/Private Booking Fields
+  visibility: 'private' | 'public' | 'org';
+  maxParticipants: number;
+  title?: string | null;
+  description?: string | null;
+
   // Relations (optional - loaded when needed)
   user?: IUser;
   room?: IRoom;
   organization?: IOrganization;
+  participants?: IBookingParticipant[];
 }
 
 // ============================================================================
@@ -101,6 +117,14 @@ export interface IBookingEntity extends IBooking {
   isUpcoming(): boolean;
   conflictsWith(other: IBookingEntity): boolean;
   getEndTime(): string;
+  
+  // Public Booking Methods
+  isPublic(): boolean;
+  isPrivate(): boolean;
+  canUserJoin(userId: string, userOrgIds: string[]): { allowed: boolean; reason?: string };
+  getAvailableSlots(): number;
+  isFull(): boolean;
+  getDisplayColor(): 'green' | 'red' | 'blue' | 'gray';
 }
 
 export interface IRoomEntity extends IRoom {

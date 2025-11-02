@@ -8,6 +8,8 @@
 import { BookingRepository } from "./repositories/BookingRepository";
 import { RoomRepository } from "./repositories/RoomRepository";
 import { UserRepository } from "./repositories/UserRepository";
+import { OrganizationRepository } from "./repositories/OrganizationRepository";
+import { OrgMembershipRepository } from "./repositories/OrgMembershipRepository";
 import { AuthorizationService } from "./services/AuthorizationService";
 import { RoomService } from "./services/RoomService";
 import { UserService } from "./services/UserService";
@@ -21,10 +23,6 @@ import {
 import { TimeSlotBookingService } from "./services/timeslot/TimeSlotBookingService";
 import { ScheduleFactory } from "./domain/timeslot/presentation/ScheduleFactory";
 
-// Placeholder imports for future repository implementations
-// import { OrganizationRepository } from './repositories/OrganizationRepository';
-// import { OrgMembershipRepository } from './repositories/OrgMembershipRepository';
-
 /**
  * Service Container
  *
@@ -37,8 +35,8 @@ class Container {
   private _bookingRepository?: BookingRepository;
   private _roomRepository?: RoomRepository;
   private _userRepository?: UserRepository;
-  // private _organizationRepository?: OrganizationRepository;
-  // private _orgMembershipRepository?: OrgMembershipRepository;
+  private _organizationRepository?: OrganizationRepository;
+  private _orgMembershipRepository?: OrgMembershipRepository;
 
   // Services
   private _authorizationService?: AuthorizationService;
@@ -69,8 +67,8 @@ class Container {
     this._bookingRepository = undefined;
     this._roomRepository = undefined;
     this._userRepository = undefined;
-    // this._organizationRepository = undefined;
-    // this._orgMembershipRepository = undefined;
+    this._organizationRepository = undefined;
+    this._orgMembershipRepository = undefined;
     this._authorizationService = undefined;
     this._roomService = undefined;
     this._userService = undefined;
@@ -104,19 +102,19 @@ class Container {
     return this._userRepository;
   }
 
-  // get organizationRepository(): OrganizationRepository {
-  //   if (!this._organizationRepository) {
-  //     this._organizationRepository = new OrganizationRepository();
-  //   }
-  //   return this._organizationRepository;
-  // }
+  get organizationRepository(): OrganizationRepository {
+    if (!this._organizationRepository) {
+      this._organizationRepository = new OrganizationRepository();
+    }
+    return this._organizationRepository;
+  }
 
-  // get orgMembershipRepository(): OrgMembershipRepository {
-  //   if (!this._orgMembershipRepository) {
-  //     this._orgMembershipRepository = new OrgMembershipRepository();
-  //   }
-  //   return this._orgMembershipRepository;
-  // }
+  get orgMembershipRepository(): OrgMembershipRepository {
+    if (!this._orgMembershipRepository) {
+      this._orgMembershipRepository = new OrgMembershipRepository();
+    }
+    return this._orgMembershipRepository;
+  }
 
   // ============================================================================
   // SERVICES (Legacy)

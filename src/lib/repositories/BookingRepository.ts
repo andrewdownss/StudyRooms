@@ -29,11 +29,23 @@ export class BookingRepository implements IBookingRepository {
         startTime: data.startTime,
         duration: data.duration,
         status: data.status || "confirmed",
+        // @ts-ignore - Prisma client will be regenerated
+        visibility: data.visibility || "private",
+        // @ts-ignore - Prisma client will be regenerated
+        maxParticipants: data.maxParticipants || 1,
+        ...(data.title && { title: data.title }),
+        ...(data.description && { description: data.description }),
       },
       include: {
         user: true,
         room: true,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -50,6 +62,12 @@ export class BookingRepository implements IBookingRepository {
         user: true,
         room: true,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -66,6 +84,12 @@ export class BookingRepository implements IBookingRepository {
         user: true,
         room: true,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
       orderBy: {
         date: "desc",
@@ -91,6 +115,12 @@ export class BookingRepository implements IBookingRepository {
         user: true,
         room: true,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
       orderBy: {
         startTime: "asc",
@@ -116,6 +146,12 @@ export class BookingRepository implements IBookingRepository {
         user: true,
         room: true,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
       orderBy: {
         date: "asc",
@@ -177,6 +213,9 @@ export class BookingRepository implements IBookingRepository {
           lte: options.filters.endDate,
         };
       }
+      if (options.filters.visibility) {
+        where.visibility = options.filters.visibility;
+      }
     }
 
     const bookings = await prisma.booking.findMany({
@@ -190,6 +229,12 @@ export class BookingRepository implements IBookingRepository {
         user: options?.includeUser !== false,
         room: options?.includeRoom !== false,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -211,12 +256,24 @@ export class BookingRepository implements IBookingRepository {
         ...(data.organizationId !== undefined && {
           organizationId: data.organizationId,
         }),
+        // @ts-ignore - Prisma client will be regenerated
+        ...(data.visibility && { visibility: data.visibility }),
+        // @ts-ignore - Prisma client will be regenerated
+        ...(data.maxParticipants && { maxParticipants: data.maxParticipants }),
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.description !== undefined && { description: data.description }),
         updatedAt: new Date(),
       },
       include: {
         user: true,
         room: true,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -237,6 +294,12 @@ export class BookingRepository implements IBookingRepository {
         user: true,
         room: true,
         organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
@@ -279,6 +342,70 @@ export class BookingRepository implements IBookingRepository {
   }
 
   /**
+   * Find public bookings (for browsing)
+   */
+  async findPublicBookings(date?: Date): Promise<IBooking[]> {
+    const where: any = {
+      // @ts-ignore - Prisma client will be regenerated
+      visibility: { in: ['public', 'org'] },
+      status: 'confirmed',
+    };
+
+    if (date) {
+      where.date = date;
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where,
+      include: {
+        user: true,
+        room: true,
+        organization: true,
+        // @ts-ignore - Prisma client will be regenerated
+        participants: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      orderBy: [
+        { date: 'asc' },
+        { startTime: 'asc' },
+      ],
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return bookings.map((b: any) => this.toDomain(b));
+  }
+
+  /**
+   * Add a participant to a booking
+   */
+  async addParticipant(bookingId: string, userId: string): Promise<void> {
+    // @ts-ignore - Prisma client will be regenerated
+    await prisma.bookingParticipant.create({
+      data: {
+        bookingId,
+        userId,
+        role: 'participant',
+      },
+    });
+  }
+
+  /**
+   * Remove a participant from a booking
+   */
+  async removeParticipant(bookingId: string, userId: string): Promise<void> {
+    // @ts-ignore - Prisma client will be regenerated
+    await prisma.bookingParticipant.deleteMany({
+      where: {
+        bookingId,
+        userId,
+      },
+    });
+  }
+
+  /**
    * Convert Prisma model to domain model
    */
   private toDomain(prismaBooking: any): IBooking {
@@ -293,10 +420,24 @@ export class BookingRepository implements IBookingRepository {
       status: prismaBooking.status as BookingStatus,
       createdAt: prismaBooking.createdAt,
       updatedAt: prismaBooking.updatedAt,
+      visibility: prismaBooking.visibility || 'private',
+      maxParticipants: prismaBooking.maxParticipants || 1,
+      title: prismaBooking.title || undefined,
+      description: prismaBooking.description || undefined,
       ...(prismaBooking.user && { user: prismaBooking.user }),
       ...(prismaBooking.room && { room: prismaBooking.room }),
       ...(prismaBooking.organization && {
         organization: prismaBooking.organization,
+      }),
+      ...(prismaBooking.participants && {
+        participants: prismaBooking.participants.map((p: any) => ({
+          id: p.id,
+          bookingId: p.bookingId,
+          userId: p.userId,
+          role: p.role,
+          joinedAt: p.joinedAt,
+          ...(p.user && { user: p.user }),
+        })),
       }),
     };
   }
