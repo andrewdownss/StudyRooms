@@ -40,6 +40,7 @@ export function AdminDebugPanel() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(true);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
+  const [labelBrightness, setLabelBrightness] = useState<number>(200);
 
   // Auto-refresh time every second
   useEffect(() => {
@@ -97,8 +98,8 @@ export function AdminDebugPanel() {
       <div className="p-4 space-y-3 font-mono text-sm">
         {/* System Time */}
         <div>
-          <div className="text-gray-400 text-xs uppercase mb-1">System Time</div>
-          <div className="bg-gray-800 px-3 py-2 rounded border border-gray-700">
+          <div className={`text-gray-${labelBrightness} text-xs uppercase mb-1`}>System Time</div>
+          <div className="bg-gray-800 px-3 py-2 rounded border border-gray-700 text-white">
             {debugInfo?.systemTime.toLocaleTimeString('en-US', { 
               hour12: false,
               hour: '2-digit',
@@ -110,31 +111,55 @@ export function AdminDebugPanel() {
 
         {/* System Date */}
         <div>
-          <div className="text-gray-400 text-xs uppercase mb-1">System Date</div>
-          <div className="bg-gray-800 px-3 py-2 rounded border border-gray-700">
+          <div className={`text-gray-${labelBrightness} text-xs uppercase mb-1`}>System Date</div>
+          <div className="bg-gray-800 px-3 py-2 rounded border border-gray-700 text-white">
             {debugInfo?.systemDate}
           </div>
         </div>
 
         {/* Timezone */}
         <div>
-          <div className="text-gray-400 text-xs uppercase mb-1">Timezone</div>
-          <div className="bg-gray-800 px-3 py-2 rounded border border-gray-700 text-xs">
+          <div className={`text-gray-${labelBrightness} text-xs uppercase mb-1`}>Timezone</div>
+          <div className="bg-gray-800 px-3 py-2 rounded border border-gray-700 text-white text-xs">
             {debugInfo?.timezone}
           </div>
         </div>
 
         {/* User Role */}
         <div>
-          <div className="text-gray-400 text-xs uppercase mb-1">User Role</div>
-          <div className="bg-purple-900 px-3 py-2 rounded border border-purple-700">
+          <div className={`text-gray-${labelBrightness} text-xs uppercase mb-1`}>User Role</div>
+          <div className="bg-purple-900 px-3 py-2 rounded border border-purple-700 text-white">
             {debugInfo?.userRole}
+          </div>
+        </div>
+
+        {/* Display Controls */}
+        <div className="border-t border-gray-700 pt-3">
+          <div className={`text-gray-${labelBrightness} text-xs uppercase mb-2`}>Display Settings</div>
+          
+          <div>
+            <label className="text-xs text-gray-300 mb-1 block">
+              Label Brightness: gray-{labelBrightness}
+            </label>
+            <input
+              type="range"
+              min="100"
+              max="900"
+              step="100"
+              value={labelBrightness}
+              onChange={(e) => setLabelBrightness(Number(e.target.value))}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Bright</span>
+              <span>Dark</span>
+            </div>
           </div>
         </div>
 
         {/* Info Note */}
         <div className="text-xs text-gray-400 pt-2 border-t border-gray-700">
-          This panel is only visible to admins. Extensible for future debug features.
+          Admin panel with adjustable text visibility.
         </div>
       </div>
     </div>
