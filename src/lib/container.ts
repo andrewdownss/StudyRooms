@@ -182,15 +182,13 @@ class Container {
   /**
    * Get TimeSlot Booking Service
    * New booking system with TimeSlot domain model
-   * Optionally includes legacy service for comparison
    */
   get timeSlotBookingService(): TimeSlotBookingService {
     if (!this._timeSlotBookingService) {
       this._timeSlotBookingService = new TimeSlotBookingService(
         this.bookingRepository,
         this.roomRepository,
-        this.userRepository,
-        this.bookingService // Include legacy service for comparison
+        this.userRepository
       );
     }
     return this._timeSlotBookingService;

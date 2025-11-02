@@ -10,6 +10,5 @@ export type {
   ITimeSlotBookingService,
   TimeSlotBookingInput,
   TimeSlotAvailabilityInput,
-  ComparisonResult,
 } from "./TimeSlotBookingService";
 

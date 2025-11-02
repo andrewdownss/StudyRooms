@@ -56,17 +56,6 @@ export interface TimeSlotAvailabilityInput {
 }
 
 /**
- * Result of comparison between timeslot and legacy systems
- */
-export interface ComparisonResult {
-  match: boolean;
-  timeSlotResult: any;
-  legacyResult: any;
-  differences?: string[];
-  timestamp: Date;
-}
-
-/**
  * Interface for TimeSlot booking service
  */
 export interface ITimeSlotBookingService {
@@ -83,12 +72,6 @@ export interface ITimeSlotBookingService {
     category: RoomCategory,
     durationMinutes: number
   ): Promise<TimeRange[]>;
-
-  // Comparison/validation methods
-  validateAgainstLegacy(input: TimeSlotBookingInput): Promise<ComparisonResult>;
-  compareAvailability(
-    input: TimeSlotAvailabilityInput
-  ): Promise<ComparisonResult>;
 }
 
 /**
@@ -98,8 +81,7 @@ export class TimeSlotBookingService implements ITimeSlotBookingService {
   constructor(
     private readonly bookingRepository: IBookingRepository,
     private readonly roomRepository: IRoomRepository,
-    private readonly userRepository: IUserRepository,
-    private readonly legacyService?: IBookingService // Optional for comparison
+    private readonly userRepository: IUserRepository
   ) {}
 
   // ============================================================================
@@ -246,92 +228,6 @@ export class TimeSlotBookingService implements ITimeSlotBookingService {
   // COMPARISON WITH LEGACY SYSTEM
   // ============================================================================
 
-  /**
-   * Validate booking input against legacy system
-   * Returns comparison result showing if both systems agree
-   */
-  async validateAgainstLegacy(
-    input: TimeSlotBookingInput
-  ): Promise<ComparisonResult> {
-    if (!this.legacyService) {
-      return {
-        match: true,
-        timeSlotResult: "No legacy service configured",
-        legacyResult: "N/A",
-        timestamp: new Date(),
-      };
-    }
-
-    const legacy = input.timeRange.toLegacy();
-
-    // Check availability with both systems
-    const timeSlotAvailable = await this.checkAvailability({
-      category: input.category,
-      date: input.date,
-      timeRange: input.timeRange,
-    });
-
-    const legacyAvailable = await this.legacyService.checkAvailability(
-      input.category,
-      input.date,
-      legacy.startTime,
-      legacy.duration
-    );
-
-    const match = timeSlotAvailable === legacyAvailable;
-    const differences: string[] = [];
-
-    if (!match) {
-      differences.push(
-        `Availability mismatch: TimeSlot=${timeSlotAvailable}, Legacy=${legacyAvailable}`
-      );
-    }
-
-    return {
-      match,
-      timeSlotResult: timeSlotAvailable,
-      legacyResult: legacyAvailable,
-      differences: differences.length > 0 ? differences : undefined,
-      timestamp: new Date(),
-    };
-  }
-
-  /**
-   * Compare availability check results
-   */
-  async compareAvailability(
-    input: TimeSlotAvailabilityInput
-  ): Promise<ComparisonResult> {
-    if (!this.legacyService) {
-      return {
-        match: true,
-        timeSlotResult: "No legacy service configured",
-        legacyResult: "N/A",
-        timestamp: new Date(),
-      };
-    }
-
-    const legacy = input.timeRange.toLegacy();
-
-    const timeSlotResult = await this.checkAvailability(input);
-    const legacyResult = await this.legacyService.checkAvailability(
-      input.category,
-      input.date,
-      legacy.startTime,
-      legacy.duration
-    );
-
-    return {
-      match: timeSlotResult === legacyResult,
-      timeSlotResult,
-      legacyResult,
-      differences:
-        timeSlotResult !== legacyResult
-          ? ["Availability check results differ"]
-          : undefined,
-      timestamp: new Date(),
-    };
-  }
 
   // ============================================================================
   // PRIVATE HELPER METHODS
