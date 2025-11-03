@@ -19,7 +19,6 @@ sequenceDiagram
 
   alt Invalid form
     Modal-->>User: Show validation errors
-    deactivate Modal
   else Valid form
     Modal->>API: POST /api/issues {issueType, description, email?, bookingId?, roomId?}
     activate API
@@ -29,7 +28,6 @@ sequenceDiagram
       API-->>Modal: 400 {error}
       deactivate API
       Modal-->>User: Show error (invalid input)
-      deactivate Modal
     else Valid body
       API->>Prisma: issue.create(data)
       activate Prisma
@@ -40,13 +38,13 @@ sequenceDiagram
       deactivate API
       Modal->>Page: onSuccess(id)
       Page-->>User: Success toast + close modal
-      deactivate Modal
     end
   end
 
   opt User retries submit
     User->>Modal: Fix input and re-submit
   end
+  deactivate Modal
 ```
 
 #### Feature 2: Inline Tips on Booking Fields
@@ -86,5 +84,3 @@ sequenceDiagram
     end
   end
 ```
-
-
