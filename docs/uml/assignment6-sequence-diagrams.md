@@ -26,7 +26,6 @@ sequenceDiagram
 
     alt Zod validation error
       API-->>Modal: 400 {error}
-      deactivate API
       Modal-->>User: Show error (invalid input)
     else Valid body
       API->>Prisma: issue.create(data)
@@ -35,10 +34,10 @@ sequenceDiagram
       DB-->>Prisma: OK (id)
       deactivate Prisma
       API-->>Modal: 201 {id}
-      deactivate API
       Modal->>Page: onSuccess(id)
       Page-->>User: Success toast + close modal
     end
+    deactivate API
   end
 
   opt User retries submit
