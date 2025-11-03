@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ReportIssueModal } from "@/components/ReportIssueModal";
 
 interface Room {
   id: string;
@@ -47,6 +48,7 @@ export default function BookRoomPage() {
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [maxParticipants, setMaxParticipants] = useState<number>(1);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -334,8 +336,9 @@ export default function BookRoomPage() {
         <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 inline-flex items-center gap-1">
                 Room
+                <span className="text-gray-400 cursor-help" title="Choose a room that fits your group size and needs.">ⓘ</span>
               </label>
               <select
                 value={selectedRoomId}
@@ -354,8 +357,9 @@ export default function BookRoomPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 inline-flex items-center gap-1">
                 Date
+                <span className="text-gray-400 cursor-help" title="You can book up to 30 days in advance.">ⓘ</span>
               </label>
               <input
                 type="date"
@@ -607,6 +611,28 @@ export default function BookRoomPage() {
           </div>
         </div>
       </div>
+
+      {/* Report an issue floating button */}
+      <button
+        onClick={() => setIsReportOpen(true)}
+        className="fixed bottom-6 right-6 bg-gray-900 text-white rounded-full shadow-lg px-4 py-3 hover:bg-gray-800"
+        title="Report an issue"
+        aria-label="Report an issue"
+      >
+        <span className="inline-flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Report issue
+        </span>
+      </button>
+
+      <ReportIssueModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        defaultEmail={session?.user?.email || null}
+        defaultBookingId={selectedSlot?.booking?.id || null}
+      />
     </div>
   );
 }
