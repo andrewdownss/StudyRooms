@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ReportIssueModal } from "@/components/ReportIssueModal";
 
 interface Room {
   id: string;
@@ -16,8 +17,8 @@ interface TimeSlotWithStatus {
   time: string;
   display: string;
   minutes: number;
-  status: 'available' | 'booked';
-  color: 'green' | 'red' | 'blue' | 'gray';
+  status: "available" | "booked";
+  color: "green" | "red" | "blue" | "gray";
   booking?: {
     id: string;
     title?: string;
@@ -36,17 +37,24 @@ export default function BookRoomPage() {
     new Date().toISOString().split("T")[0]
   );
   const [allSlots, setAllSlots] = useState<TimeSlotWithStatus[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlotWithStatus | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlotWithStatus | null>(
+    null
+  );
   const [isJoiningBooking, setIsJoiningBooking] = useState(false); // Track if viewing a public booking
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
-  
+  const [message, setMessage] = useState<{ type: string; text: string } | null>(
+    null
+  );
+
   // Booking form fields (only shown after selecting a slot)
   const [duration, setDuration] = useState<number>(60);
-  const [visibility, setVisibility] = useState<'private' | 'public' | 'org'>('private');
-  const [title, setTitle] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
+  const [visibility, setVisibility] = useState<"private" | "public" | "org">(
+    "private"
+  );
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
   const [maxParticipants, setMaxParticipants] = useState<number>(1);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -87,17 +95,22 @@ export default function BookRoomPage() {
     const slots: TimeSlotWithStatus[] = [];
     for (let hour = 8; hour < 22; hour++) {
       for (let minute of [0, 30]) {
-        const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        const timeString = `${String(hour).padStart(2, "0")}:${String(
+          minute
+        ).padStart(2, "0")}`;
         const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayString = `${displayHour}:${String(minute).padStart(2, '0')} ${ampm}`;
-        
+        const ampm = hour >= 12 ? "PM" : "AM";
+        const displayString = `${displayHour}:${String(minute).padStart(
+          2,
+          "0"
+        )} ${ampm}`;
+
         slots.push({
           time: timeString,
           display: displayString,
           minutes: hour * 60 + minute,
-          status: 'available',
-          color: 'green',
+          status: "available",
+          color: "green",
         });
       }
     }
@@ -120,26 +133,28 @@ export default function BookRoomPage() {
 
       if (res.ok) {
         const bookings = await res.json();
-        
+
         // Mark slots as booked based on existing bookings
         bookings.forEach((booking: any) => {
           const startTime = booking.startTime;
           const duration = booking.duration;
-          const startMinutes = parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1]);
-          
+          const startMinutes =
+            parseInt(startTime.split(":")[0]) * 60 +
+            parseInt(startTime.split(":")[1]);
+
           // Mark all slots covered by this booking
           for (let i = 0; i < duration / 30; i++) {
-            const slotMinutes = startMinutes + (i * 30);
-            const slot = slots.find(s => s.minutes === slotMinutes);
+            const slotMinutes = startMinutes + i * 30;
+            const slot = slots.find((s) => s.minutes === slotMinutes);
             if (slot) {
-              slot.status = 'booked';
+              slot.status = "booked";
               // Color based on visibility
-              if (booking.visibility === 'public') {
-                slot.color = 'blue';
-              } else if (booking.visibility === 'org') {
-                slot.color = 'gray';
+              if (booking.visibility === "public") {
+                slot.color = "blue";
+              } else if (booking.visibility === "org") {
+                slot.color = "gray";
               } else {
-                slot.color = 'red';
+                slot.color = "red";
               }
               slot.booking = {
                 id: booking.id,
@@ -163,25 +178,27 @@ export default function BookRoomPage() {
   };
 
   const handleSlotClick = (slot: TimeSlotWithStatus) => {
-    if (slot.status === 'booked') {
+    if (slot.status === "booked") {
       // Public bookings can be joined
-      if (slot.color === 'blue' && slot.booking) {
+      if (slot.color === "blue" && slot.booking) {
         setSelectedSlot(slot);
         setIsJoiningBooking(true);
         setMessage(null);
         return;
       }
-      
+
       // Private/org bookings show error message
       if (slot.booking) {
         setMessage({
-          type: 'error',
-          text: `This slot is ${slot.booking.visibility} booked${slot.booking.title ? ': ' + slot.booking.title : ''}`
+          type: "error",
+          text: `This slot is ${slot.booking.visibility} booked${
+            slot.booking.title ? ": " + slot.booking.title : ""
+          }`,
         });
       }
       return;
     }
-    
+
     // Available slot - show booking form
     setSelectedSlot(slot);
     setIsJoiningBooking(false);
@@ -198,7 +215,7 @@ export default function BookRoomPage() {
     }
 
     // Validate public booking fields
-    if ((visibility === 'public' || visibility === 'org') && !title.trim()) {
+    if ((visibility === "public" || visibility === "org") && !title.trim()) {
       setMessage({
         type: "error",
         text: "Title is required for public/organization bookings",
@@ -219,14 +236,19 @@ export default function BookRoomPage() {
           startSlot: selectedSlot.time,
           durationMinutes: duration,
           visibility,
-          maxParticipants: visibility === 'private' ? 1 : maxParticipants,
-          title: visibility !== 'private' ? title : undefined,
-          description: visibility !== 'private' ? description : undefined,
+          maxParticipants: visibility === "private" ? 1 : maxParticipants,
+          title: visibility !== "private" ? title : undefined,
+          description: visibility !== "private" ? description : undefined,
         }),
       });
 
       if (res.ok) {
-        const visibilityText = visibility === 'public' ? 'Public' : visibility === 'org' ? 'Organization' : 'Private';
+        const visibilityText =
+          visibility === "public"
+            ? "Public"
+            : visibility === "org"
+            ? "Organization"
+            : "Private";
         setMessage({
           type: "success",
           text: `✅ ${visibilityText} booking confirmed!`,
@@ -261,9 +283,12 @@ export default function BookRoomPage() {
     setMessage(null);
 
     try {
-      const res = await fetch(`/api/v2/bookings/${selectedSlot.booking.id}/join`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `/api/v2/bookings/${selectedSlot.booking.id}/join`,
+        {
+          method: "POST",
+        }
+      );
 
       if (res.ok) {
         setMessage({
@@ -276,7 +301,10 @@ export default function BookRoomPage() {
         setTimeout(() => loadTimeSlots(), 1000);
       } else {
         const error = await res.json();
-        setMessage({ type: "error", text: error.error || "Failed to join booking" });
+        setMessage({
+          type: "error",
+          text: error.error || "Failed to join booking",
+        });
       }
     } catch (error) {
       console.error("Error:", error);
@@ -334,8 +362,14 @@ export default function BookRoomPage() {
         <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 inline-flex items-center gap-1">
                 Room
+                <span
+                  className="text-gray-400 cursor-help"
+                  title="Choose a room that fits your group size and needs."
+                >
+                  ⓘ
+                </span>
               </label>
               <select
                 value={selectedRoomId}
@@ -354,8 +388,14 @@ export default function BookRoomPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 inline-flex items-center gap-1">
                 Date
+                <span
+                  className="text-gray-400 cursor-help"
+                  title="You can book up to 30 days in advance."
+                >
+                  ⓘ
+                </span>
               </label>
               <input
                 type="date"
@@ -385,7 +425,9 @@ export default function BookRoomPage() {
 
         {/* Color Legend */}
         <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Time Slot Colors</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">
+            Time Slot Colors
+          </h3>
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
@@ -411,7 +453,9 @@ export default function BookRoomPage() {
           <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               Available Times
-              {loading && <span className="ml-2 text-sm text-gray-500">(Loading...)</span>}
+              {loading && (
+                <span className="ml-2 text-sm text-gray-500">(Loading...)</span>
+              )}
             </h2>
 
             {allSlots.length > 0 ? (
@@ -420,14 +464,30 @@ export default function BookRoomPage() {
                   <button
                     key={slot.time}
                     onClick={() => handleSlotClick(slot)}
-                    disabled={slot.color === 'red' || slot.color === 'gray'}
+                    disabled={slot.color === "red" || slot.color === "gray"}
                     className={`
                       px-3 py-2 rounded-lg text-xs font-medium transition-all
-                      ${selectedSlot?.time === slot.time ? 'ring-2 ring-red-800 ring-offset-2' : ''}
-                      ${slot.color === 'green' && 'bg-green-100 hover:bg-green-200 text-green-800 cursor-pointer'}
-                      ${slot.color === 'red' && 'bg-red-100 text-red-800 cursor-not-allowed opacity-60'}
-                      ${slot.color === 'blue' && 'bg-blue-100 hover:bg-blue-200 text-blue-800 cursor-pointer'}
-                      ${slot.color === 'gray' && 'bg-gray-100 text-gray-800 cursor-not-allowed opacity-60'}
+                      ${
+                        selectedSlot?.time === slot.time
+                          ? "ring-2 ring-red-800 ring-offset-2"
+                          : ""
+                      }
+                      ${
+                        slot.color === "green" &&
+                        "bg-green-100 hover:bg-green-200 text-green-800 cursor-pointer"
+                      }
+                      ${
+                        slot.color === "red" &&
+                        "bg-red-100 text-red-800 cursor-not-allowed opacity-60"
+                      }
+                      ${
+                        slot.color === "blue" &&
+                        "bg-blue-100 hover:bg-blue-200 text-blue-800 cursor-pointer"
+                      }
+                      ${
+                        slot.color === "gray" &&
+                        "bg-gray-100 text-gray-800 cursor-not-allowed opacity-60"
+                      }
                     `}
                   >
                     {slot.display}
@@ -444,15 +504,27 @@ export default function BookRoomPage() {
 
           {/* Booking Details Form (1/3 width) */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Booking Details</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Booking Details
+            </h2>
 
             {selectedSlot ? (
               <div className="space-y-4">
-                <div className={`p-3 border rounded-lg ${isJoiningBooking ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
+                <div
+                  className={`p-3 border rounded-lg ${
+                    isJoiningBooking
+                      ? "bg-blue-50 border-blue-200"
+                      : "bg-red-50 border-red-200"
+                  }`}
+                >
                   <p className="text-sm font-medium text-gray-900">
                     Selected Time
                   </p>
-                  <p className={`text-lg font-bold ${isJoiningBooking ? 'text-blue-800' : 'text-red-800'}`}>
+                  <p
+                    className={`text-lg font-bold ${
+                      isJoiningBooking ? "text-blue-800" : "text-red-800"
+                    }`}
+                  >
                     {selectedSlot.display}
                   </p>
                 </div>
@@ -465,7 +537,8 @@ export default function BookRoomPage() {
                         <span className="text-blue-600 text-xl">🌐</span>
                         <div className="flex-1">
                           <h3 className="font-bold text-gray-900 text-lg">
-                            {selectedSlot.booking.title || 'Public Study Session'}
+                            {selectedSlot.booking.title ||
+                              "Public Study Session"}
                           </h3>
                           {selectedSlot.booking.description && (
                             <p className="text-sm text-gray-600 mt-1">
@@ -477,7 +550,10 @@ export default function BookRoomPage() {
                     </div>
 
                     <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-                      <p>Click "Join Study Group" to become a participant in this public booking.</p>
+                      <p>
+                        Click "Join Study Group" to become a participant in this
+                        public booking.
+                      </p>
                     </div>
 
                     <button
@@ -524,7 +600,11 @@ export default function BookRoomPage() {
                       </label>
                       <select
                         value={visibility}
-                        onChange={(e) => setVisibility(e.target.value as 'private' | 'public' | 'org')}
+                        onChange={(e) =>
+                          setVisibility(
+                            e.target.value as "private" | "public" | "org"
+                          )
+                        }
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
                       >
                         <option value="private">🔒 Private</option>
@@ -534,7 +614,7 @@ export default function BookRoomPage() {
                     </div>
 
                     {/* Public/Org Fields */}
-                    {(visibility === 'public' || visibility === 'org') && (
+                    {(visibility === "public" || visibility === "org") && (
                       <>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -571,7 +651,17 @@ export default function BookRoomPage() {
                           <input
                             type="number"
                             value={maxParticipants}
-                            onChange={(e) => setMaxParticipants(Math.max(1, Math.min(selectedRoom?.capacity || 10, Number(e.target.value))))}
+                            onChange={(e) =>
+                              setMaxParticipants(
+                                Math.max(
+                                  1,
+                                  Math.min(
+                                    selectedRoom?.capacity || 10,
+                                    Number(e.target.value)
+                                  )
+                                )
+                              )
+                            }
                             min={1}
                             max={selectedRoom?.capacity || 10}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
@@ -600,13 +690,46 @@ export default function BookRoomPage() {
             ) : (
               <div className="text-center text-gray-500 py-12">
                 <p className="text-sm">
-                  Click a <span className="text-green-600 font-semibold">green</span> time slot to begin booking
+                  Click a{" "}
+                  <span className="text-green-600 font-semibold">green</span>{" "}
+                  time slot to begin booking
                 </p>
               </div>
             )}
           </div>
         </div>
       </div>
+      {/* Report an issue floating button */}
+      <button
+        onClick={() => setIsReportOpen(true)}
+        className="fixed bottom-6 right-6 bg-gray-900 text-white rounded-full shadow-lg px-4 py-3 hover:bg-gray-800"
+        title="Report an issue"
+        aria-label="Report an issue"
+      >
+        <span className="inline-flex items-center gap-2">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Report issue
+        </span>
+      </button>
+
+      <ReportIssueModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        defaultEmail={session?.user?.email || null}
+        defaultBookingId={selectedSlot?.booking?.id || null}
+      />
     </div>
   );
 }

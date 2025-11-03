@@ -124,6 +124,24 @@ export const CredentialsSignUpSchema = z
   });
 
 // ============================================================================
+// ISSUE SCHEMAS
+// ============================================================================
+
+export const IssueCreateSchema = z.object({
+  email: z.string().email().optional(),
+  issueType: z.enum([
+    "room-issue",
+    "booking-problem",
+    "feature-request",
+    "other",
+  ]),
+  title: z.string().min(1, "Title is required").max(120).optional(),
+  description: z.string().min(1, "Description is required").max(2000),
+  bookingId: z.string().cuid().optional(),
+  roomId: z.string().cuid().optional(),
+});
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -138,3 +156,4 @@ export type UserRole = z.infer<typeof UserRoleSchema>;
 export type UserUpdateInput = z.infer<typeof UserUpdateSchema>;
 export type CredentialsSignIn = z.infer<typeof CredentialsSignInSchema>;
 export type CredentialsSignUp = z.infer<typeof CredentialsSignUpSchema>;
+export type IssueCreateInput = z.infer<typeof IssueCreateSchema>;

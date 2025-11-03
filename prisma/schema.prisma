@@ -39,19 +39,20 @@ model Session {
 }
 
 model User {
-  id            String                 @id @default(cuid())
-  name          String?
-  email         String?                @unique
-  emailVerified DateTime?
-  image         String?
-  role          String                 @default("user") // "user" | "admin"
-  password      String? // Nullable - null for Google OAuth users
-  authProvider  String                 @default("google") // "google" | "credentials"
-  accounts      Account[]
-  sessions      Session[]
-  bookings      Booking[] // Relation to bookings
-  memberships   OrgMembership[]
+  id             String               @id @default(cuid())
+  name           String?
+  email          String?              @unique
+  emailVerified  DateTime?
+  image          String?
+  role           String               @default("user") // "user" | "admin"
+  password       String? // Nullable - null for Google OAuth users
+  authProvider   String               @default("google") // "google" | "credentials"
+  accounts       Account[]
+  sessions       Session[]
+  bookings       Booking[] // Relation to bookings
+  memberships    OrgMembership[]
   participations BookingParticipant[]
+  issues         Issue[]
 }
 
 model VerificationToken {
@@ -72,6 +73,7 @@ model Room {
   bookings    Booking[] // Relation to bookings
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  issues      Issue[]
 }
 
 model Booking {
@@ -85,7 +87,7 @@ model Booking {
   status         String   @default("confirmed") // pending, confirmed, cancelled, completed, rejected
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  
+
   // Public/Private Booking Fields
   visibility      String  @default("private") // private, public, org
   maxParticipants Int     @default(1)
@@ -96,6 +98,7 @@ model Booking {
   room         Room                 @relation(fields: [roomId], references: [id], onDelete: Cascade)
   organization Organization?        @relation(fields: [organizationId], references: [id])
   participants BookingParticipant[]
+  issues       Issue[]
 
   @@index([userId])
   @@index([roomId])
@@ -110,10 +113,10 @@ model BookingParticipant {
   userId    String
   role      String   @default("participant") // creator, participant
   joinedAt  DateTime @default(now())
-  
+
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([bookingId, userId])
   @@index([bookingId])
   @@index([userId])
@@ -145,4 +148,31 @@ model OrgMembership {
   @@unique([userId, organizationId])
   @@index([userId])
   @@index([organizationId])
+}
+
+// ============================================================================
+// Issues - user-submitted issues/feedback about rooms/bookings/app
+// ============================================================================
+
+model Issue {
+  id          String   @id @default(cuid())
+  userId      String?
+  email       String?
+  issueType   String // room-issue | booking-problem | feature-request | other
+  description String
+  bookingId   String?
+  roomId      String?
+  status      String   @default("open") // open | in_progress | resolved | closed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  room    Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([roomId])
+  @@index([issueType])
+  @@index([status])
 }
