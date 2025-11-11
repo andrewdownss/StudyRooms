@@ -18,27 +18,41 @@ export class BookingEntity implements IBookingEntity {
   id: string;
   userId: string;
   roomId: string;
+  organizationId?: string;
   date: Date;
   startTime: string;
   duration: number;
   status: BookingStatus;
+  visibility: 'private' | 'public' | 'org';
+  maxParticipants: number;
+  title?: string | null;
+  description?: string | null;
   createdAt: Date;
   updatedAt: Date;
   user?: IUser;
   room?: IRoom;
+  organization?: any;
+  participants?: any[];
 
   constructor(data: IBooking) {
     this.id = data.id;
     this.userId = data.userId;
     this.roomId = data.roomId;
+    this.organizationId = data.organizationId;
     this.date = data.date;
     this.startTime = data.startTime;
     this.duration = data.duration;
     this.status = data.status;
+    this.visibility = data.visibility;
+    this.maxParticipants = data.maxParticipants;
+    this.title = data.title;
+    this.description = data.description;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
     this.user = data.user;
     this.room = data.room;
+    this.organization = data.organization;
+    this.participants = data.participants;
   }
 
   /**
@@ -173,6 +187,79 @@ export class BookingEntity implements IBookingEntity {
         throw new ValidationError("Cannot book in the past");
       }
     }
+  }
+
+  /**
+   * Check if booking is public
+   */
+  isPublic(): boolean {
+    return this.visibility === 'public';
+  }
+
+  /**
+   * Check if booking is private
+   */
+  isPrivate(): boolean {
+    return this.visibility === 'private';
+  }
+
+  /**
+   * Check if user can join this booking
+   */
+  canUserJoin(userId: string, userOrgIds: string[]): { allowed: boolean; reason?: string } {
+    if (this.visibility === 'private') {
+      return { allowed: false, reason: 'This is a private booking' };
+    }
+
+    if (userId === this.userId) {
+      return { allowed: false, reason: 'You are the creator' };
+    }
+
+    if (this.participants?.some(p => p.userId === userId)) {
+      return { allowed: false, reason: 'Already joined' };
+    }
+
+    if (this.isFull()) {
+      return { allowed: false, reason: 'Booking is full' };
+    }
+
+    if (this.visibility === 'org' && this.organizationId) {
+      if (!userOrgIds.includes(this.organizationId)) {
+        return { allowed: false, reason: 'Not a member of this organization' };
+      }
+    }
+
+    const dateStr = this.date.toISOString().split('T')[0];
+    const bookingDateTime = new Date(`${dateStr}T${this.startTime}`);
+    if (bookingDateTime < new Date()) {
+      return { allowed: false, reason: 'Booking has already started' };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
+   * Get available slots remaining
+   */
+  getAvailableSlots(): number {
+    const current = this.participants?.length || 0;
+    return Math.max(0, this.maxParticipants - current);
+  }
+
+  /**
+   * Check if booking is full
+   */
+  isFull(): boolean {
+    return this.getAvailableSlots() === 0;
+  }
+
+  /**
+   * Get display color for UI
+   */
+  getDisplayColor(): 'green' | 'red' | 'blue' | 'gray' {
+    if (this.visibility === 'public') return 'blue';
+    if (this.visibility === 'org') return 'gray';
+    return 'red';
   }
 
   /**
