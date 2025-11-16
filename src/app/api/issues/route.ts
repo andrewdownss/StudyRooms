@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
+    const userId = session?.user?.id ?? null;
 
     const { email, issueType, title, description, bookingId, roomId } =
       parsed.data;
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const created = await prisma.issue.create({
       data: {
         userId,
-        email: email ?? (session?.user?.email as string | null) ?? null,
+        email: email ?? session?.user?.email ?? null,
         issueType,
         description,
         bookingId: bookingId ?? null,

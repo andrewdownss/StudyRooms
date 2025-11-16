@@ -158,7 +158,7 @@ model Issue {
   id          String   @id @default(cuid())
   userId      String?
   email       String?
-  issueType   String // room-issue | booking-problem | feature-request | other
+  issueType   String   // room-issue | booking-problem | feature-request | other
   description String
   bookingId   String?
   roomId      String?

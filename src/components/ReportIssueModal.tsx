@@ -120,9 +120,7 @@ export function ReportIssueModal({
             </label>
             <select
               value={issueType}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                setIssueType(e.target.value)
-              }
+              onChange={(e) => setIssueType(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
             >
               <option value="room-issue">Problem with a room</option>
@@ -138,9 +136,7 @@ export function ReportIssueModal({
             </label>
             <textarea
               value={description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setDescription(e.target.value)
-              }
+              onChange={(e) => setDescription(e.target.value)}
               rows={5}
               placeholder="What's wrong? Include any details that help us reproduce it."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
@@ -159,9 +155,7 @@ export function ReportIssueModal({
               <input
                 type="text"
                 value={bookingId}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setBookingId(e.target.value)
-                }
+                onChange={(e) => setBookingId(e.target.value)}
                 placeholder="cuid..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
               />
@@ -174,9 +168,7 @@ export function ReportIssueModal({
               <input
                 type="text"
                 value={roomId}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setRoomId(e.target.value)
-                }
+                onChange={(e) => setRoomId(e.target.value)}
                 placeholder="cuid..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
               />
@@ -189,17 +181,13 @@ export function ReportIssueModal({
               {defaultEmail ? (
                 <span className="text-gray-400">(pre-filled)</span>
               ) : (
-                <span className="text-gray-400">
-                  (required if not signed in)
-                </span>
+                <span className="text-gray-400">(required if not signed in)</span>
               )}
             </label>
             <input
               type="email"
               value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEmail(e.target.value)
-              }
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-transparent"
             />

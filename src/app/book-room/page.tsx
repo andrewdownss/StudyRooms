@@ -364,12 +364,7 @@ export default function BookRoomPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 inline-flex items-center gap-1">
                 Room
-                <span
-                  className="text-gray-400 cursor-help"
-                  title="Choose a room that fits your group size and needs."
-                >
-                  ⓘ
-                </span>
+                <span className="text-gray-400 cursor-help" title="Choose a room that fits your group size and needs.">ⓘ</span>
               </label>
               <select
                 value={selectedRoomId}
@@ -390,12 +385,7 @@ export default function BookRoomPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 inline-flex items-center gap-1">
                 Date
-                <span
-                  className="text-gray-400 cursor-help"
-                  title="You can book up to 30 days in advance."
-                >
-                  ⓘ
-                </span>
+                <span className="text-gray-400 cursor-help" title="You can book up to 30 days in advance.">ⓘ</span>
               </label>
               <input
                 type="date"
@@ -699,6 +689,7 @@ export default function BookRoomPage() {
           </div>
         </div>
       </div>
+
       {/* Report an issue floating button */}
       <button
         onClick={() => setIsReportOpen(true)}
@@ -707,18 +698,8 @@ export default function BookRoomPage() {
         aria-label="Report an issue"
       >
         <span className="inline-flex items-center gap-2">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Report issue
         </span>
