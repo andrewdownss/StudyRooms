@@ -13,7 +13,7 @@ export type BookingStatus =
   | "rejected";
 export type RoomCategory = "small" | "large";
 export type UserRole = "user" | "admin" | "organization";
-export type AuthProvider = "google" | "credentials";
+export type AuthProvider = "credentials";
 
 // ============================================================================
 // USER DOMAIN
@@ -26,7 +26,7 @@ export interface IUser {
   emailVerified: Date | null;
   image: string | null;
   role: UserRole;
-  password?: string | null; // Nullable - null for Google OAuth users
+  password?: string | null; // Nullable - optional for future use
   authProvider: AuthProvider; // How the user authenticated
   createdAt?: Date;
   updatedAt?: Date;

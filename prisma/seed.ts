@@ -21,53 +21,124 @@ async function main() {
   const rooms = await prisma.room.createMany({
     data: [
       {
-        name: "Study Room 101",
-        category: "small",
-        capacity: 4,
-        description:
-          "Small study room on the first floor - Perfect for focused individual study or small group work",
-      },
-      {
-        name: "Study Room 102",
-        category: "small",
-        capacity: 4,
-        description:
-          "Small study room on the first floor - Quiet space ideal for concentration",
-      },
-      {
-        name: "Study Room 103",
-        category: "small",
-        capacity: 4,
-        description:
-          "Small study room on the first floor - Great for exam preparation",
-      },
-      {
-        name: "Study Room 104",
-        category: "small",
-        capacity: 4,
-        description:
-          "Small study room on the first floor - Equipped with whiteboard",
-      },
-      {
-        name: "Study Room 201",
+        name: "Addlestone 136",
         category: "large",
-        capacity: 12,
-        description:
-          "Large study room on the second floor - Perfect for group projects and presentations",
+        capacity: 8,
+        description: "Large study room 136 (first floor) - supports up to eight students.",
       },
       {
-        name: "Study Room 202",
-        category: "large",
-        capacity: 12,
-        description:
-          "Large study room on the second floor - Ideal for team collaboration",
+        name: "Addlestone 228",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 228 (second floor) - ideal for quiet study.",
       },
       {
-        name: "Study Room 203",
+        name: "Addlestone 229",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 229 (second floor).",
+      },
+      {
+        name: "Addlestone 230",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 230 (second floor).",
+      },
+      {
+        name: "Addlestone 231",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 231 (second floor).",
+      },
+      {
+        name: "Addlestone 232",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 232 (second floor).",
+      },
+      {
+        name: "Addlestone 233",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 233 (second floor).",
+      },
+      {
+        name: "Addlestone 234",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 234 (second floor).",
+      },
+      {
+        name: "Addlestone 236",
         category: "large",
-        capacity: 10,
-        description:
-          "Large study room on the second floor - Great for study groups",
+        capacity: 8,
+        description: "Large study room 236 (second floor) - supports up to eight students.",
+      },
+      {
+        name: "Addlestone 327",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 327 (third floor).",
+      },
+      {
+        name: "Addlestone 328",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 328 (third floor).",
+      },
+      {
+        name: "Addlestone 329",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 329 (third floor).",
+      },
+      {
+        name: "Addlestone 330",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 330 (third floor).",
+      },
+      {
+        name: "Addlestone 331",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 331 (third floor).",
+      },
+      {
+        name: "Addlestone 332",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 332 (third floor).",
+      },
+      {
+        name: "Addlestone 333",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 333 (third floor).",
+      },
+      {
+        name: "Addlestone 334",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 334 (third floor).",
+      },
+      {
+        name: "Addlestone 335",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 335 (third floor).",
+      },
+      {
+        name: "Addlestone 336",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 336 (third floor).",
+      },
+      {
+        name: "Addlestone 337",
+        category: "small",
+        capacity: 5,
+        description: "Small study room 337 (third floor).",
       },
     ],
   });

@@ -140,7 +140,7 @@ export interface UserCreateData {
   name?: string;
   password?: string | null;
   role?: string;
-  authProvider: "google" | "credentials";
+  authProvider: "credentials";
   image?: string;
 }
 

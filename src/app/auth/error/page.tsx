@@ -12,21 +12,15 @@ export default function AuthError() {
       case "Configuration":
         return "There is a problem with the server configuration.";
       case "AccessDenied":
-        return "Access denied. You must use a @g.cogc.edu email address to sign in.";
+        return "Access denied. You must use a @g.cofc.edu email address to sign in.";
       case "Verification":
         return "The verification token has expired or has already been used.";
-      case "OAuthSignin":
-        return "Error occurred during Google sign-in process.";
-      case "OAuthCallback":
-        return "Error occurred during Google authentication callback.";
-      case "OAuthCreateAccount":
-        return "Could not create account. Please ensure you're using a @g.cogc.edu email.";
       case "EmailCreateAccount":
         return "Could not create account with this email address.";
       case "Callback":
         return "Error in authentication callback. Please try again.";
       default:
-        return "An error occurred during authentication. Please ensure you're using a @g.cogc.edu email address.";
+        return "An error occurred during authentication. Please ensure you're using a @g.cofc.edu email address.";
     }
   };
 

@@ -124,7 +124,7 @@ export class UserRepository implements IUserRepository {
       image: prismaUser.image,
       role: prismaUser.role,
       password: prismaUser.password || null,
-      authProvider: prismaUser.authProvider || 'google',
+      authProvider: prismaUser.authProvider || 'credentials',
     };
   }
 }

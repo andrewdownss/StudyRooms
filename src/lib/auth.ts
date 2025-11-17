@@ -1,5 +1,4 @@
 import { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
@@ -8,10 +7,6 @@ import { container } from "./container";
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
     CredentialsProvider({
       id: 'credentials',
       name: 'Email and Password',
@@ -49,30 +44,6 @@ export const authOptions: NextAuthOptions = {
       // For credentials provider, validation already happened in authorize()
       if (account?.provider === 'credentials') {
         return true;
-      }
-      
-      // For Google provider, check email domain
-      if (account?.provider === 'google') {
-        if (user.email && !user.email.endsWith("@g.cofc.edu")) {
-          return false; // Deny sign-in
-        }
-        // Promote to admin if email is configured
-        try {
-          if (user.email) {
-            const adminEmails = (process.env.ADMIN_EMAILS || "")
-              .split(",")
-              .map((s) => s.trim().toLowerCase())
-              .filter(Boolean);
-            if (adminEmails.includes(user.email.toLowerCase())) {
-              await prisma.user.updateMany({
-                where: { email: user.email },
-                data: { role: "admin" },
-              });
-            }
-          }
-        } catch {
-          // ignore; sign-in should not fail due to role assignment
-        }
       }
       
       return true; // Allow sign-in
